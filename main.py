@@ -1,18 +1,43 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import pygame
+from pyglet import image
+from pyglet.gl import *
+from pyglet import font
+
+from cocos.director import *
+from cocos.menu import *
+from cocos.scene import *
+
+
+class RootMenu(Menu):
+    def __init__(self):
+        super(RootMenu, self).__init__('Guerilla')
+        self.menu_valign = CENTER
+        self.menu_haligh = BOTTOM
+
+        items = [
+        ( MenuItem('New Game',  self.on_newgame) ),
+        ( MenuItem('Continue',  self.on_continue_game) ),
+        ( MenuItem('Setings',   self.on_settings_open) ),
+        ( MenuItem('Quit',      self.on_quit) ),
+        ]
+
+        self.create_menu(items, shake(), shake_back())
+
+    def on_quit(self):
+        pyglet.app.exit()
+
+    def on_newgame(self):
+        pass
+
+    def on_continue_game(self):
+        pass
+
+    def on_settings_open(self):
+        pass
+
 
 if __name__ == "__main__":
-    pygame.init()
-    size=[700,500]
-    screen=pygame.display.set_mode(size)
-
-    clock = pygame.time.Clock()
-
-    end = False
-    while not end:
-        for event in pygame.event.get():
-            it event.type == pygame.QUIT:
-                done = True
-            clock.tick(20)
-
+    director.init(resizable=True)
+    sceneRoot = Scene(RootMenu())
+    director.run(sceneRoot)
