@@ -40,7 +40,7 @@ class GameLayer(Layer):
         self.player = Sprite(playerSprite)
         self.player.position = 10, 10
         self.player.velocity = 0, 0
-        self.player.speed = 50
+        self.player.speed = 150
         self.player.size = 30
         self.batch.add(self.player)
 
@@ -48,12 +48,10 @@ class GameLayer(Layer):
             trap = Sprite(trapSprite)
             trap.position = randomPosition(TRAP_SIZE, WIDTH, HEIGHT)
             self.batch.add(trap)
-            self.collman.add(trap)
 
         self.add(self.batch)
 
         self.player.do(Move())
-        self.collman.add(self.player)
 
     def on_key_press(self, symbol, modifiers):
         vx, vy = self.player.velocity
@@ -70,17 +68,18 @@ class GameLayer(Layer):
 
 
     def update(self, dt):
-        self.collman.clear()
-        for z, node in self.children:
-            self.collman.add(node)
+        pass
+        # self.collman.clear()
+        # for z, node in self.children:
+        #     self.collman.add(node)
 
-        # interactions player - others
-        for other in self.collman.iter_colliding(self.player):
-            self.toRemove.add(other)
+        # # interactions player - others
+        # for other in self.collman.iter_colliding(self.player):
+        #     self.toRemove.add(other)
 
-        for node in self.toRemove:
-            self.remove(node)
-        self.toRemove.clear()
+        # for node in self.toRemove:
+        #     self.remove(node)
+        # self.toRemove.clear()
 
 
 
