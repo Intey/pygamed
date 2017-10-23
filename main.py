@@ -5,8 +5,21 @@ from pyglet.gl import *
 from pyglet import font
 
 from cocos.director import *
+from cocos.layer import *
 from cocos.menu import *
 from cocos.scene import *
+
+playerSprite = pyglet.resource.image('player7.png')
+trapSprite = pyglet.resource.image('circle6.png')
+
+
+class GameLayer(Layer):
+    def __init__(self):
+        super(GameLayer, self).__init__()
+        self.schedule(self.update)
+
+    def update(self, dt):
+        pass
 
 
 class RootMenu(Menu):

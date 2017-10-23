@@ -130,7 +130,6 @@ def reflection_y(a):
 
 
 class Worldview(cocos.layer.Layer):
-
     """
     Responsabilities:
         Generation: random generates a level
@@ -254,6 +253,7 @@ class Worldview(cocos.layer.Layer):
         self.gate = Actor(cx, cy, rGate, 'gate', pics['wall'])
         self.gate.color = Actor.palette['wall']
         cntTrys = 0
+        # try insert(100 times) not collided gate with player
         while cntTrys < 100:
             cx = rGate + random.random() * (width - 2.0 * rGate)
             cy = rGate + random.random() * (height - 2.0 * rGate)
@@ -270,6 +270,7 @@ class Worldview(cocos.layer.Layer):
         self.cnt_food = 0
         for i in range(food_num):
             food = Actor(cx, cy, rFood, 'food', pics['food'])
+            # try(100 times) to insert. If insert - continue
             cntTrys = 0
             while cntTrys < 100:
                 cx = rFood + random.random() * (width - 2.0 * rFood)
@@ -331,6 +332,7 @@ class Worldview(cocos.layer.Layer):
 
         # update player
         buttons = self.buttons
+        # rotate user to left(if ma negative) or to right(if ma positive)
         ma = buttons['right'] - buttons['left']
         if ma != 0:
             self.player.rotation += ma * dt * self.angular_velocity
