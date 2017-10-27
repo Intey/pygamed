@@ -4,7 +4,7 @@ from cocos.tiles import load
 from cocos.layer import ScrollingManager, ScrollableLayer
 from cocos.director import director
 from cocos.scene import Scene
-from cocos.actions import Action
+from cocos.actions import Action, AccelDeccel
 from pyglet.window import key
 
 from cocos.mapcolliders import RectMapCollider
@@ -25,25 +25,42 @@ keyboard = key.KeyStateHandler()
 # And the scrolling manager like you saw last time
 scroller = ScrollingManager()
 
+class Accelerator:
+    def __init__(self, maxAccel, initAccel, subAccel, upSpeed):
+        self.maxAccel = maxAccel
+        self.minAccel = initAccel
+        self.accel = initAccel
+        self.subAccel = subAccel
+        self.upSpeed = 4
 
-# Here's something you haven't scene before!
-# We'll be using the Driver class from the "move_actions" provided by Cocos, and editing it slightly for our needs
-# The driver class is built to help make having sprites behave like vehicles much simpler
+    def accelerate(self):
+        if self.accel < self.maxAccel:
+            self.accel += self.subAccel
+        if self.accel > self.maxAccel: 
+            self.accel = self.maxAccel
+
+    def deaccelerate(self):
+        self.accel = self.minAccel
+
+
 class PlayerMover (Action):
-    # We don't need to call the init function because the Driver class already does that for us!
 
     def start(self):
         # We simply set the velocity of the target sprite to zero
         self.target.velocity = 0, 0
+        self.accelerator = Accelerator(250, 5, 40, 4)
 
-    # Instead I only want to overload this step function. This is what controls the movement of the sprite
     def step(self, dt):
-        dx = self.target.velocity[0]
-        dy = self.target.velocity[1]
+        dx = 0 # self.target.velocity[0]
+        dy = 0 # self.target.velocity[1]
 
-        dx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) * 250 * dt
-        dy = (keyboard[key.UP] - keyboard[key.DOWN]) * 250 * dt
+        if keyboard[key.UP] + keyboard[key.DOWN] + keyboard[key.LEFT] + keyboard[key.RIGHT] > 0:
+            self.accelerator.accelerate()
+        else:
+            self.accelerator.deaccelerate()
 
+        dx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) * self.accelerator.accel * dt
+        dy = (keyboard[key.UP] - keyboard[key.DOWN]) * self.accelerator.accel * dt
 
         newRect = self.target.get_rect().copy()
         newRect.x += dx
@@ -64,11 +81,6 @@ class CarLayer(ScrollableLayer):
 
         # We set the position (standard stuff)
         self.sprite.position = 200, 100
-
-        # Oh no! Something new!
-        # We set a maximum forward and backward speed for the car so that it doesn't fly off the map in an instant
-        self.sprite.max_forward_speed = 200
-        self.sprite.max_reverse_speed = 200
 
         # Then we add it
         self.add(self.sprite)
@@ -98,7 +110,3 @@ director.window.push_handlers(keyboard)
 
 # And finally we run the scene
 director.run(scene)
-
-# Now our games are actually starting to seem like, well, games!
-
-
