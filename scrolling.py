@@ -9,23 +9,8 @@ from pyglet.window import key
 
 from cocos.mapcolliders import RectMapCollider
 
-# Let's make a simple game where you drive around a track in a car
-# This code is a simplified version of the one that exists in the cocos examples
-
-# The first thing I need to do is initialize the director, because many other objects in this program depend on it
-# This time I'm going to pass in a few more parameters than usual into the initialize function
-director.init(width=800, height=600, autoscale=False, resizable=True)
-# I simply set an X and Y for the window, and allow it to be resized
-
-# Here I set a scroller and a key manager
-# The key manager is something new you haven't seen!
-# It allows me to get the keys being pressed, globally (unlike event handling layers). Pretty neat!
-keyboard = key.KeyStateHandler()
-
-# And the scrolling manager like you saw last time
-scroller = ScrollingManager()
-
 class Accelerator:
+    """Control acceleration function"""
     def __init__(self, maxAccel, initAccel, subAccel, upSpeed):
         self.maxAccel = maxAccel
         self.minAccel = initAccel
@@ -43,7 +28,12 @@ class Accelerator:
         self.accel = self.minAccel
 
 
-class PlayerMover (Action):
+class PlayerMover (Action, RectMapCollider):
+
+    def __init__(self, mapLayer):
+        self.map = mapLayer
+        super().__init__()
+        self.on_bump_handler = self.on_bump_slide
 
     def start(self):
         # We simply set the velocity of the target sprite to zero
@@ -51,8 +41,8 @@ class PlayerMover (Action):
         self.accelerator = Accelerator(250, 5, 40, 4)
 
     def step(self, dt):
-        dx = 0 # self.target.velocity[0]
-        dy = 0 # self.target.velocity[1]
+        dx = self.target.velocity[0]
+        dy = self.target.velocity[1]
 
         if keyboard[key.UP] + keyboard[key.DOWN] + keyboard[key.LEFT] + keyboard[key.RIGHT] > 0:
             self.accelerator.accelerate()
@@ -62,51 +52,44 @@ class PlayerMover (Action):
         dx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) * self.accelerator.accel * dt
         dy = (keyboard[key.UP] - keyboard[key.DOWN]) * self.accelerator.accel * dt
 
-        newRect = self.target.get_rect().copy()
+        lastRect = self.target.get_rect()
+        newRect = lastRect.copy()
         newRect.x += dx
         newRect.y += dy
+
+        # handling collisions
+        self.target.velocity = self.collide_map(self.map, lastRect, newRect, dx, dy)
+
         self.target.position = newRect.center
         # Lastly, this line simply tells the ScrollingManager to set the center of the screen on the sprite
         scroller.set_focus(self.target.x, self.target.y)
 
 
-# Now we need to make a layer for the car itself!
-# Remember that the layer needs to be scrollable so that the car can move around the map
-class CarLayer(ScrollableLayer):
-    def __init__(self):
-        super(CarLayer, self).__init__()
 
-        # Here we simply make a new Sprite out of a car image I "borrowed" from cocos
-        self.sprite = Sprite("user.png")
+class UserLayer(ScrollableLayer):
+    def __init__(self, mapLayer):
+        super(UserLayer, self).__init__()
 
-        # We set the position (standard stuff)
-        self.sprite.position = 200, 100
-
-        # Then we add it
+        self.sprite = Sprite("assets/user.png")
+        self.sprite.position = 20, 20
         self.add(self.sprite)
+        self.sprite.do(PlayerMover(mapLayer))
 
-        # And lastly we make it do that PlayerMover action we made earlier in this file (yes it was an action not a layer)
-        self.sprite.do(PlayerMover())
 
-# Now to the code that actually runs this game!
-# Here I make a layer out of that CarLayer we defined before
-car_layer = CarLayer()
+if __name__ == "__main__":
 
-# Next I load the map of the racetrack just as I did in the last tutorial
-map_layer = load("assets/road_map.tmx")["map0"]
+    director.init(width=800, height=600, autoscale=False, resizable=True)
 
-# Then we add them to the ScrollingManager
-scroller.add(map_layer)
-scroller.add(car_layer)
-# Order is important! If we added the car layer first, the map would go on top and you wouldn't see the car
+    mapLayer = load("assets/map.tmx")["terrain"]
+    userLayer = UserLayer(mapLayer)
 
-# Then we make a scene out of the scroller (just like we did before)
-scene = Scene(scroller)
-
-# This line is a bit random here but...
-# I also need to push the handlers from the window to the object from Pyglet
-# If I don't, it won't be able to handle the Cocos2D keyboard input!
-director.window.push_handlers(keyboard)
-
-# And finally we run the scene
-director.run(scene)
+    scroller = ScrollingManager()
+    # Order is important! 
+    scroller.add(mapLayer)
+    scroller.add(userLayer)
+    scene = Scene(scroller)
+    # I also need to push the handlers from the window to the object from Pyglet
+    # If I don't, it won't be able to handle the Cocos2D keyboard input!
+    keyboard = key.KeyStateHandler()
+    director.window.push_handlers(keyboard)
+    director.run(scene)
