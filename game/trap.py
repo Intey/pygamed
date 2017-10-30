@@ -2,9 +2,10 @@
 
 
 class Trap:
-    def __init__(self):
-        self._power = 0
-        self._range = 0
+    MIN_RANGE = 1
+    def __init__(self, power, range=MIN_RANGE):
+        self._power = power
+        self._range = range
     
     def power(self):
         return self._power
