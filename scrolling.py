@@ -26,7 +26,7 @@ class Accelerator:
     def accelerate(self):
         if self.accel < self.maxAccel:
             self.accel += self.subAccel
-        if self.accel > self.maxAccel: 
+        if self.accel > self.maxAccel:
             self.accel = self.maxAccel
 
     def deaccelerate(self):
@@ -66,7 +66,7 @@ class PlayerMover (Action, RectMapCollider):
         if self.collideMap:
             self.target.velocity = self.collide_map(self.collideMap, lastRect, newRect, dx, dy)
         # handling ollisions with dinamic objects
-        
+
 
         self.target.position = newRect.center
         # Lastly, this line simply tells the ScrollingManager to set the center of the screen on the sprite
@@ -75,13 +75,20 @@ class PlayerMover (Action, RectMapCollider):
 
 
 class ActorsLayer(ScrollableLayer):
-    def __init__(self):
+    def __init__(self, playerObject, WIDTH, HEIGHT):
         cell_size = 15
-        self.cm = cm.CollisionManagerGrid(0.0, self.width, 
-                                          0.0, self.height, 
+        self.player = playerObject
+        self.cm = cm.CollisionManagerGrid(0.0, WIDTH,
+                                          0.0, HEIGHT,
                                           cell_size, cell_size)
-        # call update 
+        super().__init__(self)
+        # call update
         self.schedule(self.update)
+
+    def addCollidable(self, obj):
+        ScrollableLayer.add(self, obj)
+        # self.cm.add(obj)
+
 
 
     def update(self, dt):
@@ -91,31 +98,27 @@ class ActorsLayer(ScrollableLayer):
             self.collman.add(node)
 
         # collide!!!
-        for trap in self.traps:
-            maybePlayer = self.cm.any_near(trap, trap.range)
-            if isinstance(maybePlayer, Player):
-                pass
-                
+        for trap in cm.objs_near(self.player, Trap.MAX_RANGE):
+            print(type(trap))
+            if trap.near_than(self.player, trap.range()):
+                self.player.hit(trap.power)
 
 
-
-
-
-class ActorTrap(Trap, Sprite):
+class ActorTrap(Sprite, Trap):
     def __init__(self, power, range=Trap.MIN_RANGE):
         Trap.__init__(self, power, range)
         Sprite.__init__(self, "assets/trap.png")
-        self.cshape = cm.CircleShape(self.widht/2, self.height/2)
+        self.cshape = cm.CircleShape(self.width/2, self.height/2)
 
 
-class ActorPlayer(Player, Sprite):
+class ActorPlayer(Sprite, Player):
     def __init__(self, collideMap=None):
         Sprite.__init__(self, "assets/user.png")
         self.position = 20, 20
         Player.__init__(self)
         self.do(PlayerMover(collideMap))
         self.cshape = cm.CircleShape(self.width/2, self.height/2)
-        
+
 
 if __name__ == "__main__":
     WIDTH = 800
@@ -127,11 +130,10 @@ if __name__ == "__main__":
     mapLayer = mapTMX["terrain"]
     # if i have static collide objects, i should add them to collide layer in tmx file
     # collideMap = mapTMX['collide']
-    scrollLayer = ActorsLayer()
     player = ActorPlayer() # ActorPlayer(collideMap)
+    scrollLayer = ActorsLayer(player, WIDTH, HEIGHT)
 
-    scrollLayer.add(player)
-    cm.add(player)
+    scrollLayer.addCollidable(player)
 
     scroller = ScrollingManager()
     scroller.add(mapLayer,  z=0)
@@ -141,8 +143,7 @@ if __name__ == "__main__":
     for i in range(0, 10):
         trap = ActorTrap(10)
         trap.position = int(random()*WIDTH), int(random()*HEIGHT)
-        scrollLayer.add(trap)
-        cm.add(trap)
+        scrollLayer.addCollidable(trap)
 
     scroller.add(scrollLayer, z=2)
 
