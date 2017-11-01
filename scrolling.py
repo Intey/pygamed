@@ -13,6 +13,13 @@ from game.player import Player
 from game.trap import Trap
 from random import random
 import cocos.collision_model as cm
+import cocos.euclid as eu
+
+def staticSetPos(obj, position):
+    """ position is tuple"""
+    assert isinstance(position, tuple), "should be tuple"
+    obj.position = position
+    obj.cshape.center = eu.Vector2(*position)
 
 TILE_WIDTH = 15
 class Accelerator:
@@ -47,6 +54,7 @@ class PlayerMover (Action, RectMapCollider):
         self.accelerator = Accelerator(250, 5, 40, 4)
 
     def step(self, dt):
+        """ moving player and check collide with static objects."""
         dx = self.target.velocity[0]
         dy = self.target.velocity[1]
 
@@ -74,7 +82,6 @@ class PlayerMover (Action, RectMapCollider):
         scroller.set_focus(self.target.x, self.target.y)
 
 
-
 class ActorsLayer(ScrollableLayer):
     def __init__(self, playerObject, width, height):
         ScrollableLayer.__init__(self)
@@ -88,39 +95,51 @@ class ActorsLayer(ScrollableLayer):
         self.schedule(self.update)
 
     def addCollidable(self, obj):
+        assert hasattr(obj, "cshape") and isinstance(obj.cshape, cm.CircleShape),\
+            "cant addCollidable with %s" % obj
         ScrollableLayer.add(self, obj)
 
     def update(self, dt):
-        print(self.player.sprite.position)
         # update list of collidable objects
         self.cm.clear()
         for z, node in self.children:
             self.cm.add(node)
 
         # collide!!!
-        for trap in self.cm.objs_near(self.player.sprite, Trap.MAX_RANGE):
-           print(type(trap))
-           if trap.near_than(self.player.sprite, trap.range()):
-              self.player.hit(trap.power)
+        for coll in self.cm.iter_colliding(self.player):
+            print("some collide", coll)
+
+        for neighbor in self.cm.objs_near(self.player, 250):
+            print("neighbor", neighbor)
+            if hasattr(neighbor, "trap"):
+                trap = neighbor.trap
+                if neighbor.near_than(self.player, trap.range()):
+                    self.player.hit(trap.power)
 
 
-class ActorTrap(Trap):
-    def __init__(self, power, range=Trap.MIN_RANGE):
-        Trap.__init__(self, power, range)
+class ActorTrap(Sprite):
+    def __init__(self, power, range=Trap.MIN_RANGE, position=(0,0)):
+        Sprite.__init__(self, "assets/trap.png")
+        self.position = position
+        self.cshape = cm.CircleShape(eu.Vector2(*self.position), TILE_WIDTH)
+        self.setPos(self.position)
+        self.trap = Trap(power, range)
 
-        self.sprite = Sprite("assets/trap.png")
-        self.sprite.cshape = cm.CircleShape(self.sprite.position, TILE_WIDTH)
+    def setPos(self, pos):
+        staticSetPos(self, pos)
 
 
-class ActorPlayer(Player):
+class ActorPlayer(Sprite):
     def __init__(self, collideMap=None):
-        Player.__init__(self)
+        Sprite.__init__(self, "assets/user.png")
+        self.cshape = cm.CircleShape(eu.Vector2(*self.position), TILE_WIDTH)
+        self.setPos(self.position)
+        self.player = Player()
+        self.do(PlayerMover(collideMap))
 
-        self.sprite = Sprite("assets/user.png")
-        self.sprite.position = 20, 20
-        self.sprite.cshape = cm.CircleShape(self.sprite.position, TILE_WIDTH)
-
-        self.sprite.do(PlayerMover(collideMap))
+    def setPos(self, pos):
+        """ pos should be tuple"""
+        staticSetPos(self, pos)
 
 
 if __name__ == "__main__":
@@ -134,9 +153,11 @@ if __name__ == "__main__":
     # if i have static collide objects, i should add them to collide layer in tmx file
     # collideMap = mapTMX['collide']
     player = ActorPlayer() # ActorPlayer(collideMap)
+    player.setPos( (20, 20) )
+
     scrollLayer = ActorsLayer(player, WIDTH, HEIGHT)
 
-    scrollLayer.addCollidable(player.sprite)
+    scrollLayer.addCollidable(player)
 
     scroller = ScrollingManager()
     scroller.add(mapLayer,  z=0)
@@ -145,8 +166,8 @@ if __name__ == "__main__":
 
     for i in range(0, 10):
         trap = ActorTrap(10)
-        trap.sprite.position = int(random()*mapLayer.px_width), int(random()*mapLayer.px_height)
-        scrollLayer.addCollidable(trap.sprite)
+        trap.setPos( (int(random()*mapLayer.px_width), int(random()*mapLayer.px_height)) )
+        scrollLayer.addCollidable(trap)
 
     scroller.add(scrollLayer, z=2)
 
