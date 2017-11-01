@@ -14,6 +14,7 @@ from game.trap import Trap
 from random import random
 import cocos.collision_model as cm
 
+TILE_WIDTH = 15
 class Accelerator:
     """Control acceleration function"""
     def __init__(self, maxAccel, initAccel, subAccel, upSpeed):
@@ -75,49 +76,51 @@ class PlayerMover (Action, RectMapCollider):
 
 
 class ActorsLayer(ScrollableLayer):
-    def __init__(self, playerObject, WIDTH, HEIGHT):
-        cell_size = 15
+    def __init__(self, playerObject, width, height):
+        ScrollableLayer.__init__(self)
+
+        self.height = height
+        self.width = width
         self.player = playerObject
-        self.cm = cm.CollisionManagerGrid(0.0, WIDTH,
-                                          0.0, HEIGHT,
-                                          cell_size, cell_size)
-        super().__init__(self)
+        self.cm = cm.CollisionManagerGrid(0.0, self.width, 0.0, self.height,
+                                          TILE_WIDTH, TILE_WIDTH)
         # call update
         self.schedule(self.update)
 
     def addCollidable(self, obj):
         ScrollableLayer.add(self, obj)
-        # self.cm.add(obj)
-
-
 
     def update(self, dt):
+        print(self.player.sprite.position)
         # update list of collidable objects
-        self.collman.clear()
+        self.cm.clear()
         for z, node in self.children:
-            self.collman.add(node)
+            self.cm.add(node)
 
         # collide!!!
-        for trap in cm.objs_near(self.player, Trap.MAX_RANGE):
-            print(type(trap))
-            if trap.near_than(self.player, trap.range()):
-                self.player.hit(trap.power)
+        for trap in self.cm.objs_near(self.player.sprite, Trap.MAX_RANGE):
+           print(type(trap))
+           if trap.near_than(self.player.sprite, trap.range()):
+              self.player.hit(trap.power)
 
 
-class ActorTrap(Sprite, Trap):
+class ActorTrap(Trap):
     def __init__(self, power, range=Trap.MIN_RANGE):
         Trap.__init__(self, power, range)
-        Sprite.__init__(self, "assets/trap.png")
-        self.cshape = cm.CircleShape(self.width/2, self.height/2)
+
+        self.sprite = Sprite("assets/trap.png")
+        self.sprite.cshape = cm.CircleShape(self.sprite.position, TILE_WIDTH)
 
 
-class ActorPlayer(Sprite, Player):
+class ActorPlayer(Player):
     def __init__(self, collideMap=None):
-        Sprite.__init__(self, "assets/user.png")
-        self.position = 20, 20
         Player.__init__(self)
-        self.do(PlayerMover(collideMap))
-        self.cshape = cm.CircleShape(self.width/2, self.height/2)
+
+        self.sprite = Sprite("assets/user.png")
+        self.sprite.position = 20, 20
+        self.sprite.cshape = cm.CircleShape(self.sprite.position, TILE_WIDTH)
+
+        self.sprite.do(PlayerMover(collideMap))
 
 
 if __name__ == "__main__":
@@ -133,7 +136,7 @@ if __name__ == "__main__":
     player = ActorPlayer() # ActorPlayer(collideMap)
     scrollLayer = ActorsLayer(player, WIDTH, HEIGHT)
 
-    scrollLayer.addCollidable(player)
+    scrollLayer.addCollidable(player.sprite)
 
     scroller = ScrollingManager()
     scroller.add(mapLayer,  z=0)
@@ -142,8 +145,8 @@ if __name__ == "__main__":
 
     for i in range(0, 10):
         trap = ActorTrap(10)
-        trap.position = int(random()*WIDTH), int(random()*HEIGHT)
-        scrollLayer.addCollidable(trap)
+        trap.sprite.position = int(random()*mapLayer.px_width), int(random()*mapLayer.px_height)
+        scrollLayer.addCollidable(trap.sprite)
 
     scroller.add(scrollLayer, z=2)
 
