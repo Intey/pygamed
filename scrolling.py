@@ -8,6 +8,7 @@ from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
 from cocos.sprite import Sprite
 from cocos.tiles import load
+from cocos.text import Label
 
 from game.player import Player
 from game.trap import Trap
@@ -41,23 +42,29 @@ class Accelerator:
         self.accel = self.minAccel
 
 
-class PlayerMover (Action, RectMapCollider):
+class ActorsLayer(ScrollableLayer):
+    def __init__(self, playerObject, width, height, collideMap=None):
+        ScrollableLayer.__init__(self)
 
-    def __init__(self, player,  collideMap=None):
-        self.collideMap = collideMap
-        self.player = player
-        super().__init__()
-        self.on_bump_handler = self.on_bump_slide
-
-    def start(self):
-        # We simply set the velocity of the target sprite to zero
-        self.target.velocity = 0, 0
+        self.height = height
+        self.width = width
+        self.player = playerObject
         self.accelerator = Accelerator(250, 5, 40, 4)
 
-    def step(self, dt):
-        """ moving player and check collide with static objects."""
-        dx = self.target.velocity[0]
-        dy = self.target.velocity[1]
+        self.mapCollider = RectMapCollider()
+        self.mapCollider.on_bump_handler = self.mapCollider.on_bump_slide
+        self.collideMap = collideMap
+
+        self.cm = cm.CollisionManagerGrid(0.0, self.width, 0.0, self.height,
+                                          TILE_WIDTH, TILE_WIDTH)
+
+        self.toRemove = []
+        # call update
+        self.schedule(self.update)
+
+    def movementHandling(self, lastRect, dt):
+        dx = self.player.velocity[0]
+        dy = self.player.velocity[1]
 
         if keyboard[key.UP] + keyboard[key.DOWN] + keyboard[key.LEFT] + keyboard[key.RIGHT] > 0:
             self.accelerator.accelerate()
@@ -67,40 +74,40 @@ class PlayerMover (Action, RectMapCollider):
         dx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) * self.accelerator.accel * dt
         dy = (keyboard[key.UP] - keyboard[key.DOWN]) * self.accelerator.accel * dt
 
-        lastRect = self.target.get_rect()
         newRect = lastRect.copy()
         newRect.x += dx
         newRect.y += dy
 
+        self.player.setPos(newRect.center)
+
+        return newRect
+
+    def collideHandling(self, lastRect, newRect):
+
         # handling collisions with static objects(trees, rocks, etc.)
         if self.collideMap:
-            self.target.velocity = self.collide_map(self.collideMap, lastRect, newRect, dx, dy)
-        # handling ollisions with dinamic objects
+            collider = self.mapCollider
+            self.player.velocity = collider.collide_map(self.collideMap,
+                                                        lastRect,
+                                                        newRect,
+                                                        dx, dy)
+        # handling collisions with dinamic objects
+        cctr = self.player.cshape.center
 
-        self.target.position = newRect.center
-        self.player.cshape.center = eu.Vector2(newRect.center)
-        # Lastly, this line simply tells the ScrollingManager to set the center of the screen on the sprite
-        scroller.set_focus(self.target.x, self.target.y)
+        # for coll in self.cm.iter_colliding(self.player):
+        #     print("some collide", coll)
 
+        for neighbor in self.cm.objs_near(self.player, Trap.MAX_RANGE):
+            if hasattr(neighbor, "trap"):
+                trap = neighbor.trap
+                if neighbor.cshape.near_than(self.player.cshape, trap.range()):
+                    self.player.player.hit(trap.power)
+                    self.toRemove.append(neighbor)
 
-class ActorsLayer(ScrollableLayer):
-    def __init__(self, playerObject, width, height):
-        ScrollableLayer.__init__(self)
+        for rm in self.toRemove:
+            self.remove(rm)
+        self.toRemove.clear()
 
-        self.height = height
-        self.width = width
-        self.player = playerObject
-        self.cm = cm.CollisionManagerGrid(0.0, self.width, 0.0, self.height,
-                                          TILE_WIDTH, TILE_WIDTH)
-        # call update
-        self.schedule(self.update)
-
-    def addCollidable(self, obj):
-        assert hasattr(obj, "cshape") and isinstance(obj.cshape, cm.CircleShape),\
-            "cant addCollidable with %s" % obj
-        ScrollableLayer.add(self, obj)
-        print("addCollidable", obj.cshape.center)
-        self.cm.add(obj)
 
     def update(self, dt):
         # update list of collidable objects
@@ -109,16 +116,19 @@ class ActorsLayer(ScrollableLayer):
             # print("update", type(node), node.cshape.center)
             self.cm.add(node)
 
-        # collide!!!
-        for coll in self.cm.iter_colliding(self.player):
-            print("some collide", coll)
+        lastRect = self.player.get_rect()
+        newRect = self.movementHandling(lastRect, dt)
 
-        for neighbor in self.cm.objs_near(self.player, Trap.MAX_RANGE):
-            print("neighbor", neighbor)
-            if hasattr(neighbor, "trap"):
-                trap = neighbor.trap
-                if neighbor.near_than(self.player, trap.range()):
-                    self.player.hit(trap.power)
+        self.collideHandling(lastRect, newRect)
+
+        scroller.set_focus(self.player.x, self.player.y)
+
+    def addCollidable(self, obj):
+        assert hasattr(obj, "cshape") and isinstance(obj.cshape, cm.CircleShape),\
+            "cant addCollidable with %s" % obj
+        ScrollableLayer.add(self, obj)
+        print("addCollidable", obj.cshape.center)
+        self.cm.add(obj)
 
 
 class ActorTrap(Sprite):
@@ -139,12 +149,33 @@ class ActorPlayer(Sprite):
         self.cshape = cm.CircleShape(eu.Vector2(*self.position), TILE_WIDTH)
         self.setPos(self.position)
         self.player = Player()
-        self.do(PlayerMover(self))
+        self.velocity = 0, 0
 
     def setPos(self, pos):
         """ pos should be tuple"""
         staticSetPos(self, pos)
 
+
+class Hud(ScrollableLayer):
+    def __init__(self, player, width, height):
+        super(Hud, self).__init__()
+        self.width = width
+        self.height = height
+        self.player = player
+        self.msg = Label('health %s' % self.player.player.health,
+                         font_name='somebitch',
+                         anchor_x='left',
+                         anchor_y='top',
+                         align='left')
+        self.add(self.msg)
+        self.schedule(self.update)
+
+    def update(self, dt):
+        self.msg = Label('health %s' % self.player.player.health,
+                         font_name='somebitch',
+                         anchor_x='left',
+                         anchor_y='top',
+                         align='left')
 
 if __name__ == "__main__":
     WIDTH = 800
@@ -164,7 +195,10 @@ if __name__ == "__main__":
     scrollLayer.addCollidable(player)
 
     scroller = ScrollingManager()
-    scroller.add(mapLayer,  z=0)
+
+    scroller.add(mapLayer,  z=1)
+    hud = Hud(player, WIDTH, HEIGHT)
+    scroller.add(hud, z=2)
 
     # scroller.add(collideMap, z=1)
 
@@ -173,7 +207,7 @@ if __name__ == "__main__":
         trap.setPos( (int(random()*mapLayer.px_width), int(random()*mapLayer.px_height)) )
         scrollLayer.addCollidable(trap)
 
-    scroller.add(scrollLayer, z=2)
+    scroller.add(scrollLayer, z=4)
 
     scene = Scene(scroller)
     # I also need to push the handlers from the window to the object from Pyglet
