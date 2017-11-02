@@ -43,8 +43,9 @@ class Accelerator:
 
 class PlayerMover (Action, RectMapCollider):
 
-    def __init__(self, collideMap=None):
+    def __init__(self, player,  collideMap=None):
         self.collideMap = collideMap
+        self.player = player
         super().__init__()
         self.on_bump_handler = self.on_bump_slide
 
@@ -76,8 +77,8 @@ class PlayerMover (Action, RectMapCollider):
             self.target.velocity = self.collide_map(self.collideMap, lastRect, newRect, dx, dy)
         # handling ollisions with dinamic objects
 
-
         self.target.position = newRect.center
+        self.player.cshape.center = eu.Vector2(newRect.center)
         # Lastly, this line simply tells the ScrollingManager to set the center of the screen on the sprite
         scroller.set_focus(self.target.x, self.target.y)
 
@@ -98,18 +99,21 @@ class ActorsLayer(ScrollableLayer):
         assert hasattr(obj, "cshape") and isinstance(obj.cshape, cm.CircleShape),\
             "cant addCollidable with %s" % obj
         ScrollableLayer.add(self, obj)
+        print("addCollidable", obj.cshape.center)
+        self.cm.add(obj)
 
     def update(self, dt):
         # update list of collidable objects
         self.cm.clear()
         for z, node in self.children:
+            # print("update", type(node), node.cshape.center)
             self.cm.add(node)
 
         # collide!!!
         for coll in self.cm.iter_colliding(self.player):
             print("some collide", coll)
 
-        for neighbor in self.cm.objs_near(self.player, 250):
+        for neighbor in self.cm.objs_near(self.player, Trap.MAX_RANGE):
             print("neighbor", neighbor)
             if hasattr(neighbor, "trap"):
                 trap = neighbor.trap
@@ -135,7 +139,7 @@ class ActorPlayer(Sprite):
         self.cshape = cm.CircleShape(eu.Vector2(*self.position), TILE_WIDTH)
         self.setPos(self.position)
         self.player = Player()
-        self.do(PlayerMover(collideMap))
+        self.do(PlayerMover(self))
 
     def setPos(self, pos):
         """ pos should be tuple"""
