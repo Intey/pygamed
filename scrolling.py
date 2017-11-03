@@ -156,26 +156,33 @@ class ActorPlayer(Sprite):
         staticSetPos(self, pos)
 
 
-class Hud(ScrollableLayer):
+class Hud(Layer):
     def __init__(self, player, width, height):
         super(Hud, self).__init__()
         self.width = width
         self.height = height
         self.player = player
-        self.msg = Label('health %s' % self.player.player.health,
+        self.playerOldHp = player.player.health
+        msg = Label('health %s' % self.player.player.health,
                          font_name='somebitch',
                          anchor_x='left',
-                         anchor_y='top',
-                         align='left')
-        self.add(self.msg)
+                         anchor_y='bottom',
+                         width=width,
+                         height=height,
+                         x = 5,
+                         y = -5,
+                    )
+        self.add(msg, name='msg')
         self.schedule(self.update)
 
     def update(self, dt):
-        self.msg = Label('health %s' % self.player.player.health,
-                         font_name='somebitch',
-                         anchor_x='left',
-                         anchor_y='top',
-                         align='left')
+        hp = self.player.player.health
+        if self.playerOldHp != hp:
+            self.playerOldHp = hp
+            label = self.get('msg').element
+            label.begin_update()
+            label.text='health %s' % hp
+            label.end_update()
 
 if __name__ == "__main__":
     WIDTH = 800
@@ -197,8 +204,6 @@ if __name__ == "__main__":
     scroller = ScrollingManager()
 
     scroller.add(mapLayer,  z=1)
-    hud = Hud(player, WIDTH, HEIGHT)
-    scroller.add(hud, z=2)
 
     # scroller.add(collideMap, z=1)
 
@@ -207,9 +212,16 @@ if __name__ == "__main__":
         trap.setPos( (int(random()*mapLayer.px_width), int(random()*mapLayer.px_height)) )
         scrollLayer.addCollidable(trap)
 
+    t1 = ActorTrap(20)
+    t1.setPos( (40, 80) )
+    scrollLayer.addCollidable(t1)
+
     scroller.add(scrollLayer, z=4)
 
     scene = Scene(scroller)
+
+    hud = Hud(player, WIDTH, HEIGHT)
+    scene.add(hud, z=1)
     # I also need to push the handlers from the window to the object from Pyglet
     # If I don't, it won't be able to handle the Cocos2D keyboard input!
     keyboard = key.KeyStateHandler()
