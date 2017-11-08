@@ -13,8 +13,8 @@ from cocos.text import Label
 from cocos.tiles import load
 from pyglet.window import key
 
-from game.player import Player
-from game.trap import Trap
+from domain.player import Player
+from domain.trap import Trap
 
 
 def staticSetPos(obj, position):
