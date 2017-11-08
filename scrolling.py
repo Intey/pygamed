@@ -87,19 +87,20 @@ class ActorsLayer(ScrollableLayer):
 
         self.player.setPos(newRect.center)
 
-        return newRect
+        return (newRect, dx, dy)
+
+
+    def collideMapHandling(self, lastRect, newRect, dx, dy):
+        # handling collisions with static objects(trees, rocks, etc.)
+        if self.collideMap:
+            collider = self.mapCollider
+            self.player.velocity = collider.collide_map(self.collideMap,
+                                                        lastRect,
+                                                        newRect,
+                                                        dx, dy)
 
     def collideHandling(self, lastRect, newRect):
-
-        # handling collisions with static objects(trees, rocks, etc.)
-        # if self.collideMap:
-        #     collider = self.mapCollider
-        #     self.player.velocity = collider.collide_map(self.collideMap,
-        #                                                 lastRect,
-        #                                                 newRect,
-        #                                                 dx, dy)
         # handling collisions with dynamic objects
-
         for maybeTrap in self.cm.objs_near(self.player, Trap.MAX_RANGE):
             if hasattr(maybeTrap, "domain") \
                     and isinstance(maybeTrap.domain, Trap):
@@ -115,9 +116,10 @@ class ActorsLayer(ScrollableLayer):
             self.cm.add(node)
 
         lastRect = self.player.get_rect()
-        newRect = self.movementHandling(lastRect, dt)
+        newRect, dx, dy = self.movementHandling(lastRect, dt)
 
         self.collideHandling(lastRect, newRect)
+        # self.collideMapHandling(lastRect, newRect, dx, dy)
 
         scroller.set_focus(self.player.x, self.player.y)
 
