@@ -5,6 +5,7 @@ import cocos.collision_model as cm
 import cocos.euclid as eu
 from cocos.director import director
 from cocos.layer import ScrollingManager, ScrollableLayer, Layer
+from cocos.layer.util_layers import ColorLayer
 from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
 from cocos.sprite import Sprite
@@ -99,19 +100,18 @@ class ActorsLayer(ScrollableLayer):
         #                                                 dx, dy)
         # handling collisions with dynamic objects
 
-        maybeTrap = self.cm.any_near(self.player, Trap.MAX_RANGE)
-        if hasattr(maybeTrap, "domain") \
-                and isinstance(maybeTrap.domain, Trap):
-            trap = maybeTrap.domain
-            if maybeTrap.cshape.near_than(self.player.cshape, trap.range()):
-                self.player.domain.hit(trap.power)
-                self.remove(maybeTrap)
+        for maybeTrap in self.cm.objs_near(self.player, Trap.MAX_RANGE):
+            if hasattr(maybeTrap, "domain") \
+                    and isinstance(maybeTrap.domain, Trap):
+                trap = maybeTrap.domain
+                if maybeTrap.cshape.near_than(self.player.cshape, trap.range()):
+                    self.player.domain.hit(trap.power)
+                    self.remove(maybeTrap)
 
     def update(self, dt):
         # update list of collidable objects
         self.cm.clear()
         for z, node in self.children:
-            print("update", type(node), node.cshape.center)
             self.cm.add(node)
 
         lastRect = self.player.get_rect()
@@ -121,7 +121,7 @@ class ActorsLayer(ScrollableLayer):
 
         scroller.set_focus(self.player.x, self.player.y)
 
-    def addCollidable(self, obj: Actor):
+    def addCollidable(self, obj):
         assert hasattr(obj, "cshape") and isinstance(obj.cshape,
                                                      cm.CircleShape), \
             "can't addCollidable with %s" % obj
@@ -157,8 +157,12 @@ class Hud(Layer):
                     width=width,
                     height=25,
                     x=5,
-                    y=height,
+                    y=height-3,
                     )
+
+        hudBackground = ColorLayer(73, 106, 44, 255, width=WIDTH, height=25)
+        hudBackground.position= (0, HEIGHT-25)
+        self.add(hudBackground)
         self.add(msg, name='msg')
         self.schedule(self.update)
 
@@ -188,7 +192,7 @@ if __name__ == "__main__":
 
     player = Actor('assets/user.png', position=(20, 20),
                    domain=Player())  # ActorPlayer(collideMap)
-    scrollLayer = ActorsLayer(player, WIDTH, HEIGHT)
+    scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height)
     scrollLayer.addCollidable(player)
     for i in range(0, 10):
         trap = Actor('assets/trap.png',
@@ -200,20 +204,11 @@ if __name__ == "__main__":
 
     scene = Scene(scroller)
 
-    # hudBackground = ColorLayer(73, 106, 44, 0, width=WIDTH, height=25)
-    # hudBackground.position=100, 100
-    # scene.add(hudBackground, z=1)
+    # scene.add(hudBackground, z=2)
 
     hud = Hud(player, WIDTH, HEIGHT)
-    scene.add(hud, z=2)
+    scene.add(hud, z=3)
 
     keyboard = key.KeyStateHandler()
     director.window.push_handlers(keyboard)
     director.run(scene)
-
-
-    def typed(a: str) -> str:
-        return int(a) + 1
-
-
-    print(typed(12))
