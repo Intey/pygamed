@@ -1,5 +1,6 @@
 # Imports as usual
 from random import random, randrange
+import time
 
 import cocos.collision_model as cm
 import cocos.euclid as eu
@@ -15,7 +16,10 @@ from pyglet.window import key
 
 from domain.player import Player
 from domain.trap import Trap
+from domain.sticks import Sticks
+from domain.utils import collectResource
 
+from time import time
 
 def staticSetPos(obj, position):
     """ position is tuple"""
@@ -63,6 +67,8 @@ class ActorsLayer(ScrollableLayer):
         self.cm = cm.CollisionManagerGrid(0.0, self.width, 0.0, self.height,
                                           TILE_WIDTH, TILE_WIDTH)
 
+        self.collectingSticks = False
+        self.collectingStartTime = None
         # call update
         self.schedule(self.update)
 
@@ -76,10 +82,10 @@ class ActorsLayer(ScrollableLayer):
         else:
             self.accelerator.deaccelerate()
 
-        dx = (keyboard[key.RIGHT] - keyboard[
-            key.LEFT]) * self.accelerator.accel * dt
-        dy = (keyboard[key.UP] - keyboard[
-            key.DOWN]) * self.accelerator.accel * dt
+        dx = (keyboard[key.RIGHT] - keyboard[key.LEFT])\
+                * self.accelerator.accel * dt
+        dy = (keyboard[key.UP] - keyboard[key.DOWN])\
+                * self.accelerator.accel * dt
 
         newRect = lastRect.copy()
         newRect.x += dx
@@ -88,7 +94,6 @@ class ActorsLayer(ScrollableLayer):
         self.player.setPos(newRect.center)
 
         return (newRect, dx, dy)
-
 
     def collideMapHandling(self, lastRect, newRect, dx, dy):
         # handling collisions with static objects(trees, rocks, etc.)
@@ -99,7 +104,7 @@ class ActorsLayer(ScrollableLayer):
                                                         newRect,
                                                         dx, dy)
 
-    def collideHandling(self, lastRect, newRect):
+    def trapCollideHandling(self, lastRect, newRect):
         # handling collisions with dynamic objects
         for maybeTrap in self.cm.objs_near(self.player, Trap.MAX_RANGE):
             if hasattr(maybeTrap, "domain") \
@@ -108,6 +113,22 @@ class ActorsLayer(ScrollableLayer):
                 if maybeTrap.cshape.near_than(self.player.cshape, trap.range()):
                     self.player.domain.hit(trap.power)
                     self.remove(maybeTrap)
+
+    def sticksCollectingHandling(self, dt):
+        if keyboard[key.E]:
+            for maybeSticks in self.cm.objs_colliding(player):
+                if hasattr(maybeSticks, "domain")\
+                        and isinstance(maybeSticks.domain, Sticks):
+                    if not self.collectingSticks:
+                        self.collectingSticks = True
+                        self.collectingStartTime = time()
+                    if abs(self.collectingStartTime - time()) >= 2.0:
+                        self.collectingStartTime = time()
+                        sticks = maybeSticks.domain
+                        player.collectResource(sticks)
+
+        else:
+            self.collectingSticks = False
 
     def update(self, dt):
         # update list of collidable objects
@@ -118,9 +139,9 @@ class ActorsLayer(ScrollableLayer):
         lastRect = self.player.get_rect()
         newRect, dx, dy = self.movementHandling(lastRect, dt)
 
-        self.collideHandling(lastRect, newRect)
+        self.trapCollideHandling(lastRect, newRect)
+        self.sticksCollectingHandling(dt)
         # self.collideMapHandling(lastRect, newRect, dx, dy)
-
         scroller.set_focus(self.player.x, self.player.y)
 
     def addCollidable(self, obj):
@@ -182,6 +203,22 @@ def randomPos(w, h):
     return (int(random() * w), int(random() * h))
 
 
+def generateTraps(scrollLayer):
+    for i in range(0, 10):
+        trap = Actor('assets/trap.png',
+                     position=randomPos(WIDTH, HEIGHT),
+                     domain=Trap(randrange(1, 30),
+                                 randrange(Trap.MIN_RANGE, Trap.MAX_RANGE)))
+        scrollLayer.addCollidable(trap)
+
+
+def generateSticks(scrollLayer):
+    for i in range(0, 10):
+        sticks = Actor('assets/sticks.png',
+                       position=randomPos(WIDTH, HEIGHT),
+                       domain=Sticks(randrange(5, 20)))
+        scrollLayer.addCollidable(sticks)
+
 if __name__ == "__main__":
     WIDTH = 800
     HEIGHT = 600
@@ -196,12 +233,8 @@ if __name__ == "__main__":
                    domain=Player())  # ActorPlayer(collideMap)
     scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height)
     scrollLayer.addCollidable(player)
-    for i in range(0, 10):
-        trap = Actor('assets/trap.png',
-                     position=randomPos(WIDTH, HEIGHT),
-                     domain=Trap(randrange(1, 30),
-                                 randrange(Trap.MIN_RANGE, Trap.MAX_RANGE)))
-        scrollLayer.addCollidable(trap)
+    generateTraps(scrollLayer)
+    generateSticks(scrollLayer)
     scroller.add(scrollLayer, z=2)
 
     scene = Scene(scroller)
