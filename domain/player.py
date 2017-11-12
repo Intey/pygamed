@@ -5,7 +5,10 @@ class Player:
     def __init__(self):
         self.health = 100
         self.alive = True
-        self.collectSpeed = 10
+        # TODO: extract to collector
+        self.collectSpeed = 1
+        self.collectCount = 10
+        self.inventory = {}
 
     def hit(self, power):
         self.health -= power

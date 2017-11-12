@@ -20,6 +20,7 @@ from domain.sticks import Sticks
 from domain.utils import collectResource
 
 from time import time
+from domain.collector import Collector
 
 def staticSetPos(obj, position):
     """ position is tuple"""
@@ -70,6 +71,7 @@ class ActorsLayer(ScrollableLayer):
         self.collectingSticks = False
         self.collectingStartTime = None
         # call update
+        self.collector = Collector()
         self.schedule(self.update)
 
     def movementHandling(self, lastRect, dt):
@@ -115,20 +117,27 @@ class ActorsLayer(ScrollableLayer):
                     self.remove(maybeTrap)
 
     def sticksCollectingHandling(self, dt):
-        if keyboard[key.E]:
-            for maybeSticks in self.cm.objs_colliding(player):
+        playerActor = self.player
+        playerLogic = player.domain 
+        if not keyboard[key.E]:
+            # self.collector.stop()
+            self.collectingSticks = False
+        else:
+            for maybeSticks in self.cm.objs_colliding(playerActor):
                 if hasattr(maybeSticks, "domain")\
                         and isinstance(maybeSticks.domain, Sticks):
                     if not self.collectingSticks:
+
+                    # if not self.collector.running:
+                        # self.collector.start()
+                        # self.collector.collect(player, sticks)
                         self.collectingSticks = True
                         self.collectingStartTime = time()
-                    if abs(self.collectingStartTime - time()) >= 2.0:
+
+                    if abs(self.collectingStartTime - time()) >= playerLogic.collectSpeed:
                         self.collectingStartTime = time()
                         sticks = maybeSticks.domain
-                        player.collectResource(sticks)
-
-        else:
-            self.collectingSticks = False
+                        collectResource(playerLogic, sticks)
 
     def update(self, dt):
         # update list of collidable objects
@@ -173,7 +182,8 @@ class Hud(Layer):
         self.height = height
         self.player = player.domain
         self.playerOldHp = self.player.health
-        msg = Label('health %s' % self.player.health,
+        msg = Label('health %s, sticks: %s' % (self.player.health, 
+                                               self.player.inventory.get('sticks', 0)),
                     font_name='somebitch',
                     anchor_x='left',
                     anchor_y='top',  # really - it's top of screen
@@ -190,13 +200,13 @@ class Hud(Layer):
         self.schedule(self.update)
 
     def update(self, dt):
-        hp = self.player.health
-        if self.playerOldHp != hp:
-            self.playerOldHp = hp
-            label = self.get('msg').element
-            label.begin_update()
-            label.text = 'health %s' % hp
-            label.end_update()
+        p = self.player
+        hp = p.health
+        label = self.get('msg').element
+        label.begin_update()
+        label.text = 'health {}, sticks: {}'.format(hp,
+                                                    p.inventory.get('sticks', 0))
+        label.end_update()
 
 
 def randomPos(w, h):
