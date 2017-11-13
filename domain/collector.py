@@ -20,16 +20,15 @@ class Collector:
 
   def collect(self, player: Player, resource: Resource):
     """ 
-    Place resource in player inventory. Collecting use time() and player info
+    Collect resource in player inventory. Collecting use time() and player info
     about speed, and count. Should be called in update every time to check
     elapsed time
     """
     if not self.running:
       self.start()
     elapsed = abs(self.startTime - time()) 
-    print("collect. elaps", elapsed)
     if elapsed >= player.collectSpeed:
-      print("Here it is:")
+      print("collect. elaps", elapsed)
       self.startTime = time()
       self.__direct_collect(player, resource)
 
