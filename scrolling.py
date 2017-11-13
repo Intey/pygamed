@@ -120,24 +120,13 @@ class ActorsLayer(ScrollableLayer):
         playerActor = self.player
         playerLogic = player.domain 
         if not keyboard[key.E]:
-            # self.collector.stop()
-            self.collectingSticks = False
+            self.collector.stop()
         else:
             for maybeSticks in self.cm.objs_colliding(playerActor):
                 if hasattr(maybeSticks, "domain")\
                         and isinstance(maybeSticks.domain, Sticks):
-                    if not self.collectingSticks:
-
-                    # if not self.collector.running:
-                        # self.collector.start()
-                        # self.collector.collect(player, sticks)
-                        self.collectingSticks = True
-                        self.collectingStartTime = time()
-
-                    if abs(self.collectingStartTime - time()) >= playerLogic.collectSpeed:
-                        self.collectingStartTime = time()
-                        sticks = maybeSticks.domain
-                        collectResource(playerLogic, sticks)
+                    sticks = maybeSticks.domain
+                    self.collector.collect(playerLogic, sticks)
 
     def update(self, dt):
         # update list of collidable objects
