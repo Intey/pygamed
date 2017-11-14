@@ -38,8 +38,8 @@ def updateSticksCountSprite(actor):
     spriteMap = {
             keys[0]: PImage('assets/sticks.png'),
             keys[1]: PImage('assets/sticks-mid.png'),
-            keys[2]:  PImage('assets/sticks-light.png'),
-            keys[3]:  PImage('assets/sticks-almost.png')
+            keys[2]: PImage('assets/sticks-light.png'),
+            keys[3]: PImage('assets/sticks-almost.png')
     }
     vals = spriteMap.keys()
     # if  50 < rest < 75 - show sticks-light
