@@ -6,8 +6,8 @@ class Player:
         self.health = 100
         self.alive = True
         # TODO: extract to collector
-        self.collectSpeed = 1
-        self.collectCount = 10
+        self.collectSpeed = 0.5
+        self.collectCount = 2
         self.inventory = {}
 
     def hit(self, power):

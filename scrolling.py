@@ -1,6 +1,4 @@
 # Imports as usual
-from random import random, randrange
-import time
 
 import cocos.collision_model as cm
 import cocos.euclid as eu
@@ -18,10 +16,12 @@ from pyglet.resource import image as PImage
 from domain.player import Player
 from domain.trap import Trap
 from domain.sticks import Sticks
-from domain.utils import collectResource
-
-from time import time
+from domain.utils import collectResource, splitPartition
 from domain.collector import Collector
+
+
+from random import random, randrange
+from time import time
 
 def staticSetPos(obj, position):
     """ position is tuple"""
@@ -30,20 +30,23 @@ def staticSetPos(obj, position):
     obj.cshape.center = eu.Vector2(*position)
 
 
+
 # which sprite show when count has value
 def updateSticksCountSprite(actor):
-    spriteMap = { 
-            100: PImage('assets/sticks.png'),
-            75:  PImage('assets/sticks-mid.png'),
-            50:  PImage('assets/sticks-light.png'),
-            25:  PImage('assets/sticks-almost.png')
+    # partition - prtn
+    keys = splitPartition(Sticks.MAX, Sticks.MIN, 4)
+    spriteMap = {
+            keys[0]: PImage('assets/sticks.png'),
+            keys[1]: PImage('assets/sticks-mid.png'),
+            keys[2]:  PImage('assets/sticks-light.png'),
+            keys[3]:  PImage('assets/sticks-almost.png')
     }
     vals = spriteMap.keys()
     # if  50 < rest < 75 - show sticks-light
     filtered = list(filter(lambda v: v - actor.domain.value < 0, vals))
-    if not filtered: 
+    if not filtered:
         key = min(vals)
-    else: 
+    else:
         key = max(filtered)
     print("got key {}, vals {}, real {}".format(key, filtered, actor.domain.value))
     actor.image = spriteMap[key]
@@ -138,7 +141,7 @@ class ActorsLayer(ScrollableLayer):
 
     def sticksCollectingHandling(self, dt):
         playerActor = self.player
-        playerLogic = player.domain 
+        playerLogic = player.domain
         if not keyboard[key.E]:
             self.collector.stop()
         else:
@@ -147,6 +150,8 @@ class ActorsLayer(ScrollableLayer):
                         and isinstance(maybeSticks.domain, Sticks):
                     sticks = maybeSticks.domain
                     self.collector.collect(playerLogic, sticks)
+                    if maybeSticks.domain.value <= 0:
+                        self.remove(maybeSticks)
                     # injected in generateSticks. update sprite image
                     updateSticksCountSprite(maybeSticks)
 
@@ -193,7 +198,7 @@ class Hud(Layer):
         self.height = height
         self.player = player.domain
         self.playerOldHp = self.player.health
-        msg = Label('health %s, sticks: %s' % (self.player.health, 
+        msg = Label('health %s, sticks: %s' % (self.player.health,
                                                self.player.inventory.get('sticks', 0)),
                     font_name='somebitch',
                     anchor_x='left',
@@ -237,7 +242,7 @@ def generateSticks(scrollLayer):
     for i in range(0, 10):
         sticks = Actor('assets/sticks.png',
                        position=randomPos(WIDTH, HEIGHT),
-                       domain=Sticks(randrange(10, 101)))
+                       domain=Sticks(randrange(Sticks.MIN, Sticks.MAX)))
         updateSticksCountSprite(sticks)
 
         scrollLayer.addCollidable(sticks)
