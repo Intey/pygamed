@@ -13,6 +13,7 @@ from cocos.sprite import Sprite
 from cocos.text import Label
 from cocos.tiles import load
 from pyglet.window import key
+from pyglet.resource import image as PImage
 
 from domain.player import Player
 from domain.trap import Trap
@@ -27,6 +28,25 @@ def staticSetPos(obj, position):
     assert isinstance(position, tuple), "should be tuple"
     obj.position = position
     obj.cshape.center = eu.Vector2(*position)
+
+
+# which sprite show when count has value
+def updateSticksCountSprite(actor):
+    spriteMap = { 
+            100: PImage('assets/sticks.png'),
+            75:  PImage('assets/sticks-mid.png'),
+            50:  PImage('assets/sticks-light.png'),
+            25:  PImage('assets/sticks-almost.png')
+    }
+    vals = spriteMap.keys()
+    # if  50 < rest < 75 - show sticks-light
+    filtered = list(filter(lambda v: v - actor.domain.value < 0, vals))
+    if not filtered: 
+        key = min(vals)
+    else: 
+        key = max(filtered)
+    print("got key {}, vals {}, real {}".format(key, filtered, actor.domain.value))
+    actor.image = spriteMap[key]
 
 
 TILE_WIDTH = 15
@@ -127,6 +147,8 @@ class ActorsLayer(ScrollableLayer):
                         and isinstance(maybeSticks.domain, Sticks):
                     sticks = maybeSticks.domain
                     self.collector.collect(playerLogic, sticks)
+                    # injected in generateSticks. update sprite image
+                    updateSticksCountSprite(maybeSticks)
 
     def update(self, dt):
         # update list of collidable objects
@@ -215,7 +237,9 @@ def generateSticks(scrollLayer):
     for i in range(0, 10):
         sticks = Actor('assets/sticks.png',
                        position=randomPos(WIDTH, HEIGHT),
-                       domain=Sticks(randrange(5, 20)))
+                       domain=Sticks(randrange(10, 101)))
+        updateSticksCountSprite(sticks)
+
         scrollLayer.addCollidable(sticks)
 
 if __name__ == "__main__":
