@@ -15,5 +15,3 @@ class Player:
         if self.health <= 0:
             self.health = 0
             self.alive = False
-
-        print("hit!", self.health)
