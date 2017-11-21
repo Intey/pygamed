@@ -4,11 +4,9 @@ import cocos.collision_model as cm
 import cocos.euclid as eu
 from cocos.director import director
 from cocos.layer import ScrollingManager, ScrollableLayer, Layer
-from cocos.layer.util_layers import ColorLayer
 from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
 from cocos.sprite import Sprite
-from cocos.text import Label
 from cocos.tiles import load
 from pyglet.window import key
 from pyglet.resource import image as PImage
@@ -18,6 +16,8 @@ from domain.trap import Trap
 from domain.sticks import Sticks
 from domain.utils import collectResource, splitPartition
 from domain.collector import Collector
+
+from gui.hud import HUD
 
 
 from random import random, randrange
@@ -191,39 +191,6 @@ class Actor(Sprite):
         staticSetPos(self, pos)
 
 
-class Hud(Layer):
-    def __init__(self, player, width, height):
-        Layer.__init__(self)
-        self.width = width
-        self.height = height
-        self.player = player.domain
-        self.playerOldHp = self.player.health
-        msg = Label('health %s, sticks: %s' % (self.player.health,
-                                               self.player.inventory.get('sticks', 0)),
-                    font_name='somebitch',
-                    anchor_x='left',
-                    anchor_y='top',  # really - it's top of screen
-                    width=width,
-                    height=25,
-                    x=5,
-                    y=height-3,
-                    )
-
-        hudBackground = ColorLayer(73, 106, 44, 255, width=WIDTH, height=25)
-        hudBackground.position= (0, HEIGHT-25)
-        self.add(hudBackground)
-        self.add(msg, name='msg')
-        self.schedule(self.update)
-
-    def update(self, dt):
-        p = self.player
-        hp = p.health
-        label = self.get('msg').element
-        label.begin_update()
-        label.text = 'health {}, sticks: {}'.format(hp,
-                                                    p.inventory.get('sticks', 0))
-        label.end_update()
-
 
 def randomPos(w, h):
     return (int(random() * w), int(random() * h))
@@ -250,7 +217,7 @@ def generateSticks(scrollLayer):
 if __name__ == "__main__":
     WIDTH = 800
     HEIGHT = 600
-    director.init(width=WIDTH, height=HEIGHT, autoscale=False, resizable=True)
+    director.init(width=WIDTH, height=HEIGHT, autoscale=False, resizable=False)
     mapTMX = load("assets/map.tmx")
     mapLayer = mapTMX["terrain"]
     scroller = ScrollingManager()
@@ -269,7 +236,7 @@ if __name__ == "__main__":
 
     # scene.add(hudBackground, z=2)
 
-    hud = Hud(player, WIDTH, HEIGHT)
+    hud = HUD(player, WIDTH, HEIGHT)
     scene.add(hud, z=3)
 
     keyboard = key.KeyStateHandler()
