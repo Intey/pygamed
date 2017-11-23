@@ -3,12 +3,11 @@ class Builder:
     - create instance of craft object
     - controller between Inventory, Recipe and Player
     """
-    def __init__(self, **recipies):
+    def __init__(self, inventory, recipies):
         """ define which reciepes can be build with this builder """
         self.recipies = recipies
-
-    def set_inventory(self, inventory):
         self.inventory = inventory
+
 
     def build(self, recipe_name):
         """ craft
@@ -20,9 +19,9 @@ class Builder:
         if self.inventory.subtract(recipe.ingridients):
             results = []
             for i in range(recipe.product_count):
-                results.append(recipe.Product())
-                
-            
+                results.append(recipe.factory())
+
+            return results
             # check that all ingridients available 
             # if so, subtract resources, and create item
 

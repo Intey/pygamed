@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .resource import Resource
+from domain.resource import Resource
 
 
 class Sticks(Resource):
