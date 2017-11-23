@@ -10,3 +10,7 @@ class Trap:
 
     def range(self):
         return self._range
+
+    def __eq__(self, o):
+        return type(self) == type(o) and self.power == o.power \
+                and self._range == o._range

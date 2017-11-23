@@ -24,9 +24,3 @@ class Builder:
             return results
             # check that all ingridients available 
             # if so, subtract resources, and create item
-
-
-
-
-
-

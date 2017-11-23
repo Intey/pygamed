@@ -8,24 +8,30 @@ class Inventory:
     def __init__(self):
         self.items = {}
 
+    def __getitem__(self, key):
+        return self.items.get(key, None)
+
+    def add(self, *resources):
+        for resource in resources:
+            name = resource.name
+            if self.items.get(name):
+                self.items[name] += resource.value
+            else:
+                self.items[name] = resource.value
+
     def subtract(self, resources):
         """ subtract resources from inventory. Used for building, crafting.
         Return true, if all resources available and subtracted. Otherwice - 
         false"""
         for k, v in resources.items():
             # check that all resources exists
-            all_found = True
-            if self.items.get(k):
-                count = self.items[k] - v
-                if count < 0:
-                    return False
-                # it's okey.
-                self.items[k] = count
+            count = self.items.get(k, 0) 
+            if count < v:
+                return False
 
-            return True
+        for k, v in resources.items():
+            count = self.items[k] - v
+            # it's okey.
+            self.items[k] = count
 
-
-        return False
-
-    def add(self, resource):
-        pass
+        return True
