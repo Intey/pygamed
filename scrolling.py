@@ -8,6 +8,7 @@ from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
 from cocos.sprite import Sprite
 from cocos.tiles import load
+from cocos.actions.move_actions import Move
 from pyglet.window import key
 from pyglet.resource import image as PImage
 
@@ -16,12 +17,14 @@ from domain.trap import Trap
 from domain.sticks import Sticks
 from domain.utils import collectResource, splitPartition
 from domain.collector import Collector
+from sprites import getBearSprite
 
 from gui.hud import HUD
 
 
 from random import random, randrange
 from time import time
+from math import sqrt
 
 def staticSetPos(obj, position):
     """ position is tuple"""
@@ -52,6 +55,7 @@ def updateSticksCountSprite(actor):
     actor.image = spriteMap[key]
 
 
+# does not affect any
 TILE_WIDTH = 15
 
 
@@ -190,6 +194,34 @@ class Actor(Sprite):
     def setPos(self, pos):
         staticSetPos(self, pos)
 
+class Bear(Actor):
+    def __init__(self, player, position=(0,0), domain=None):
+        Actor.__init__(self, getBearSprite(), position=position)
+        self.scale = 2
+        self.player = player
+        self.schedule_interval(self.update, .2)
+        self.move = Move()
+        self.velocity = (0,0)
+        self.do(self.move)
+        self.speed = 15
+
+    def update(self, dt):
+        self.goTo(self.player.cshape)
+
+    def goTo(self, target):
+        distance = self.cshape.distance(target)
+        if distance < 550 and distance > 50:
+
+            x = target.center.x - self.cshape.center.x
+            y = target.center.y - self.cshape.center.y
+            dir_size = sqrt(x**2 + y**2)
+            vel = x/dir_size, y/dir_size
+            self.velocity = vel[0] * self.speed, vel[1] * self.speed
+        elif distance <= 15:
+            self.velocity= 0,0
+            print("eating you...")
+
+        self.setPos(self.position)
 
 
 def randomPos(w, h):
@@ -221,16 +253,24 @@ if __name__ == "__main__":
     mapTMX = load("assets/map.tmx")
     mapLayer = mapTMX["terrain"]
     scroller = ScrollingManager()
+    mapLayer.set_cell_opacity(3,3, 0)
+    mapLayer.set_cell_opacity(4,4, 10000)
     scroller.add(mapLayer, z=1)
     # scroller.add(collideMap, z=1)
 
     player = Actor('assets/user.png', position=(20, 20),
                    domain=Player())  # ActorPlayer(collideMap)
+
     scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height)
     scrollLayer.addCollidable(player)
+
     generateTraps(scrollLayer)
     generateSticks(scrollLayer)
     scroller.add(scrollLayer, z=2)
+
+    bear = Bear(player, (100, 100))
+    
+    scrollLayer.addCollidable(bear)
 
     scene = Scene(scroller)
 
