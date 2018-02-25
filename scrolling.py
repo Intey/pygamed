@@ -6,77 +6,71 @@ from cocos.director import director
 from cocos.layer import ScrollingManager, ScrollableLayer, Layer
 from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
-from cocos.sprite import Sprite
 from cocos.tiles import load
 from cocos.actions.move_actions import Move
 from pyglet.window import key
-from pyglet.resource import image as PImage
 
 from domain.player import Player
 from domain.trap import Trap
+from domain.bear import Bear
 from domain.sticks import Sticks
-from domain.utils import collectResource, splitPartition
 from domain.collector import Collector
 from sprites import getBearSprite
+from init import generateSticks, generateTraps
+from actor import Actor
+#FIXME: WTF import
+from init import updateSticksCountSprite
 
 from gui.hud import HUD
 
 
-from random import random, randrange
 from time import time
 from math import sqrt
-
-def staticSetPos(obj, position):
-    """ position is tuple"""
-    assert isinstance(position, tuple), "should be tuple"
-    obj.position = position
-    obj.cshape.center = eu.Vector2(*position)
-
-
-
-# which sprite show when count has value
-def updateSticksCountSprite(actor):
-    # partition - prtn
-    keys = splitPartition(Sticks.MAX, Sticks.MIN, 4)
-    spriteMap = {
-            keys[0]: PImage('assets/sticks.png'),
-            keys[1]: PImage('assets/sticks-mid.png'),
-            keys[2]: PImage('assets/sticks-light.png'),
-            keys[3]: PImage('assets/sticks-almost.png')
-    }
-    vals = spriteMap.keys()
-    # if  50 < rest < 75 - show sticks-light
-    filtered = list(filter(lambda v: v - actor.domain.value < 0, vals))
-    if not filtered:
-        key = min(vals)
-    else:
-        key = max(filtered)
-    print("got key {}, vals {}, real {}".format(key, filtered, actor.domain.value))
-    actor.image = spriteMap[key]
-
+import logging
 
 # does not affect any
 TILE_WIDTH = 15
 
+def followSpeed(subject:cm.CircleShape, subjectSpeed:int, target:cm.CircleShape):
+    """
+    Return speed(and direction implicit) as x,y, with with se should move for
+    follow target.
+    """
+    distance = subject.distance(target)
+    if distance < 550 and distance > 15:
+
+        x = target.center.x - subject.center.x
+        y = target.center.y - subject.center.y
+        dir_size = sqrt(x**2 + y**2)
+        vel = x/dir_size, y/dir_size
+        return vel[0] * subjectSpeed, vel[1] * subjectSpeed
+    else:  # distance <= 15:
+        return 0, 0
+
 
 class Accelerator:
-    """Control acceleration function"""
+    """Control speed function"""
 
-    def __init__(self, maxAccel, initAccel, subAccel, upSpeed):
+    def __init__(self, maxAccel, initAccel, stepAccel):
         self.maxAccel = maxAccel
         self.minAccel = initAccel
-        self.accel = initAccel
-        self.subAccel = subAccel
-        self.upSpeed = 4
+        self.speed = initAccel
+        self.stepAccel = stepAccel
 
     def accelerate(self):
-        if self.accel < self.maxAccel:
-            self.accel += self.subAccel
-        if self.accel > self.maxAccel:
-            self.accel = self.maxAccel
+        """
+        Increment speed
+        """
+        if self.speed < self.maxAccel:
+            self.speed += self.stepAccel
+        if self.speed > self.maxAccel:
+            self.speed = self.maxAccel
 
-    def deaccelerate(self):
-        self.accel = self.minAccel
+    def reset(self):
+        """
+        reset speed
+        """
+        self.speed = self.minAccel
 
 
 class ActorsLayer(ScrollableLayer):
@@ -86,12 +80,14 @@ class ActorsLayer(ScrollableLayer):
         self.height = height
         self.width = width
         self.player = playerObject
-        self.accelerator = Accelerator(250, 5, 40, 4)
+        self.accelerator = Accelerator(150, 5, 40)
 
+        # collision with map (static objects)
         self.mapCollider = RectMapCollider()
         self.mapCollider.on_bump_handler = self.mapCollider.on_bump_slide
         self.collideMap = collideMap
 
+        # dynamic objects collision. used in
         self.cm = cm.CollisionManagerGrid(0.0, self.width, 0.0, self.height,
                                           TILE_WIDTH, TILE_WIDTH)
 
@@ -102,6 +98,9 @@ class ActorsLayer(ScrollableLayer):
         self.schedule(self.update)
 
     def movementHandling(self, lastRect, dt):
+        """
+        Controls user input in 'movement' aspect.
+        """
         dx = self.player.velocity[0]
         dy = self.player.velocity[1]
 
@@ -109,12 +108,12 @@ class ActorsLayer(ScrollableLayer):
                 keyboard[key.RIGHT] > 0:
             self.accelerator.accelerate()
         else:
-            self.accelerator.deaccelerate()
+            self.accelerator.reset()
 
         dx = (keyboard[key.RIGHT] - keyboard[key.LEFT])\
-                * self.accelerator.accel * dt
+                * self.accelerator.speed * dt
         dy = (keyboard[key.UP] - keyboard[key.DOWN])\
-                * self.accelerator.accel * dt
+                * self.accelerator.speed * dt
 
         newRect = lastRect.copy()
         newRect.x += dx
@@ -125,7 +124,9 @@ class ActorsLayer(ScrollableLayer):
         return (newRect, dx, dy)
 
     def collideMapHandling(self, lastRect, newRect, dx, dy):
-        # handling collisions with static objects(trees, rocks, etc.)
+        """
+        Handling collisions with static objects(trees, rocks, etc.)
+        """
         if self.collideMap:
             collider = self.mapCollider
             self.player.velocity = collider.collide_map(self.collideMap,
@@ -133,19 +134,25 @@ class ActorsLayer(ScrollableLayer):
                                                         newRect,
                                                         dx, dy)
 
-    def trapCollideHandling(self, lastRect, newRect):
+    def collisionHandling(self, lastRect, newRect):
+        """
+        Handle collision of player/BearActor with traps
+        """
         # handling collisions with dynamic objects
-        for maybeTrap in self.cm.objs_near(self.player, Trap.MAX_RANGE):
-            if hasattr(maybeTrap, "domain") \
-                    and isinstance(maybeTrap.domain, Trap):
-                trap = maybeTrap.domain
-                if maybeTrap.cshape.near_than(self.player.cshape, trap.range()):
-                    self.player.domain.hit(trap.power)
-                    self.remove(maybeTrap)
+        from domain.collision import collide
+        for left, right in self.cm.iter_all_collisions():
+            leftStay, rightStay = collide(left.domain, right.domain, left.cshape.distance(right.cshape))
+            if not leftStay:
+                self.remove(left)
+            if not rightStay:
+                self.remove(right)
+            if not self.player.domain.alive:
+                self.gameOver()
+
 
     def sticksCollectingHandling(self, dt):
         playerActor = self.player
-        playerLogic = player.domain
+        playerLogic = self.player.domain
         if not keyboard[key.E]:
             self.collector.stop()
         else:
@@ -168,7 +175,7 @@ class ActorsLayer(ScrollableLayer):
         lastRect = self.player.get_rect()
         newRect, dx, dy = self.movementHandling(lastRect, dt)
 
-        self.trapCollideHandling(lastRect, newRect)
+        self.collisionHandling(lastRect, newRect)
         self.sticksCollectingHandling(dt)
         # self.collideMapHandling(lastRect, newRect, dx, dy)
         scroller.set_focus(self.player.x, self.player.y)
@@ -176,77 +183,41 @@ class ActorsLayer(ScrollableLayer):
     def addCollidable(self, obj):
         assert hasattr(obj, "cshape") and isinstance(obj.cshape,
                                                      cm.CircleShape), \
-            "can't addCollidable with %s" % obj
+            f"can't addCollidable with {obj}"
         ScrollableLayer.add(self, obj)
         print("addCollidable", obj.cshape.center)
         self.cm.add(obj)
 
+    def gameOver(self):
+        print("DIED")
+        self.unschedule(self.update)
+        pass
 
-class Actor(Sprite):
-    def __init__(self, spriteFilepath, position=(0, 0), domain=None):
-        Sprite.__init__(self, spriteFilepath)
-        self.position = position
-        self.cshape = cm.CircleShape(eu.Vector2(*self.position), TILE_WIDTH)
-        self.setPos(self.position)
-        self.domain = domain
-        self.velocity = 0, 0
 
-    def setPos(self, pos):
-        staticSetPos(self, pos)
-
-class Bear(Actor):
-    def __init__(self, player, position=(0,0), domain=None):
-        Actor.__init__(self, getBearSprite(), position=position)
+class BearActor(Actor):
+    def __init__(self, player, position=(0,0)):
+        Actor.__init__(self, getBearSprite(), position=position, domain=Bear)
         self.scale = 2
         self.player = player
-        self.schedule_interval(self.update, .2)
+        self.schedule_interval(self.update, .10)
         self.move = Move()
-        self.velocity = (0,0)
+        # self.velocity = (0,0)
         self.do(self.move)
-        self.speed = 15
+        self.accel = Accelerator(46, 5, 40)
 
     def update(self, dt):
-        self.goTo(self.player.cshape)
+        self.goTo(self.player)
 
-    def goTo(self, target):
-        distance = self.cshape.distance(target)
-        if distance < 550 and distance > 50:
-
-            x = target.center.x - self.cshape.center.x
-            y = target.center.y - self.cshape.center.y
-            dir_size = sqrt(x**2 + y**2)
-            vel = x/dir_size, y/dir_size
-            self.velocity = vel[0] * self.speed, vel[1] * self.speed
-        elif distance <= 15:
-            self.velocity= 0,0
-            print("eating you...")
-
+    def goTo(self, target:Actor):
+        self.accel.accelerate()
+        self.velocity = followSpeed(self.cshape, self.accel.speed, target.cshape)
         self.setPos(self.position)
 
 
-def randomPos(w, h):
-    return (int(random() * w), int(random() * h))
-
-
-def generateTraps(scrollLayer):
-    for i in range(0, 10):
-        trap = Actor('assets/trap.png',
-                     position=randomPos(WIDTH, HEIGHT),
-                     domain=Trap(randrange(1, 30),
-                                 randrange(Trap.MIN_RANGE, Trap.MAX_RANGE)))
-        scrollLayer.addCollidable(trap)
-
-
-def generateSticks(scrollLayer):
-    for i in range(0, 10):
-        sticks = Actor('assets/sticks.png',
-                       position=randomPos(WIDTH, HEIGHT),
-                       domain=Sticks(randrange(Sticks.MIN, Sticks.MAX)))
-        updateSticksCountSprite(sticks)
-
-        scrollLayer.addCollidable(sticks)
-
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug("start app")
+
     WIDTH = 800
     HEIGHT = 600
     director.init(width=WIDTH, height=HEIGHT, autoscale=False, resizable=False)
@@ -268,8 +239,8 @@ if __name__ == "__main__":
     generateSticks(scrollLayer)
     scroller.add(scrollLayer, z=2)
 
-    bear = Bear(player, (100, 100))
-    
+    bear = BearActor(player, (100, 100))
+
     scrollLayer.addCollidable(bear)
 
     scene = Scene(scroller)
