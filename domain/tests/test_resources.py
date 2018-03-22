@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from domain import Resource
+from domain.resource import Resource
 
 
 class Test(metaclass=Resource):

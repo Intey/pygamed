@@ -1,11 +1,13 @@
-from domain import Inventory
-from domain import Recipe
-from domain import Builder
 
-from domain import Resource
-from domain import Sticks
-from domain import Rope
-from domain import Trap
+from domain.inventory import Inventory
+from domain.collector import Collector
+from domain.recipe import Recipe
+from domain.builder import Builder
+
+from domain.resource import Resource
+from domain.sticks import Sticks
+from domain.rope import Rope
+from domain.trap import Trap
 
 
 def createTrapFactory(power):

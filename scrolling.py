@@ -196,7 +196,7 @@ class ActorsLayer(ScrollableLayer):
 
 class BearActor(Actor):
     def __init__(self, player, position=(0,0)):
-        Actor.__init__(self, getBearSprite(), position=position, domain=Bear)
+        Actor.__init__(self, getBearSprite(), position=position, domain=Bear())
         self.scale = 2
         self.player = player
         self.schedule_interval(self.update, .10)

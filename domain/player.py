@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
+from domain.unit import Unit
 
 
-class Player:
-    def __init__(self):
-        self.health = 100
-        self.alive = True
+class Player(Unit):
+    def __init__(self, health=100):
+        Unit.__init__(self, health=health)
         # TODO: extract to collector
         self.collectSpeed = 0.5
         self.collectCount = 2
         self.inventory = {}
-
-    def hit(self, power):
-        self.health -= power
-        if self.health <= 0:
-            self.health = 0
-            self.alive = False
