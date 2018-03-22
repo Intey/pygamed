@@ -1,3 +1,7 @@
+attrs==17.4.0
 cocos2d==0.6.5
+pluggy==0.6.0
+py==1.5.2
 pyglet==1.2.4
+pytest==3.4.2
 six==1.11.0
