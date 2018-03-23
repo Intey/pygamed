@@ -4,17 +4,20 @@
 Collide resposibility is return actions, that
 """
 
+from itertools import permutations
+from logging import getLogger
+from collections import defaultdict
+
 from domain.player import Player
 from domain.trap import Trap
 from domain.bear import Bear
 from domain.sticks import Sticks
 from domain.unit import Unit
-from collections import defaultdict
 from domain.noop import noop
 
-from logging import getLogger
 
 logger = getLogger(__name__)
+
 
 def collide(left:Unit, right:Unit, distance:int):
     """
@@ -47,18 +50,40 @@ def damageUnitByTrap(trap:Trap, unit:Unit):
     logger.debug(f"damage {trap.power}:{oldh} -> {unit.health}")
     return unit.alive
 
-__COLLIDE_MAP = defaultdict(noop)
-__COLLIDE_MAP[(Bear  , Player)]   = noop
-__COLLIDE_MAP[(Bear  , Sticks)]   = noop
-__COLLIDE_MAP[(Bear  , Trap)]     = drop  # player sets traps. No damage him
-__COLLIDE_MAP[(Player, Bear)]   = noop
-__COLLIDE_MAP[(Player, Sticks)] = noop
-__COLLIDE_MAP[(Player, Trap)]   = drop  # player sets traps. No damage him
-__COLLIDE_MAP[(Sticks, Bear)]   = noop
-__COLLIDE_MAP[(Sticks, Player)] = noop
-__COLLIDE_MAP[(Sticks, Sticks)] = drop
-__COLLIDE_MAP[(Sticks, Trap)]   = noop
-__COLLIDE_MAP[(Trap  , Bear)]     = drop  # player sets traps. No damage him
-__COLLIDE_MAP[(Trap  , Player)]   = damageUnitByTrap
-__COLLIDE_MAP[(Trap  , Sticks)]   = noop
-__COLLIDE_MAP[(Trap  , Trap)]     = drop
+def slowDownUnit(trap:Trap, unit:Unit):
+    unit_alive = damageUnitByTrap(trap, unit)
+    if unit_alive:
+        unit.speed -= 5
+    return unit_alive
+
+
+
+# function should return True, if second(right) argument shouldStay in game or
+# False if it should be removed
+def create_collide_map():
+    collide_map = dict()
+    # dummy fill
+    for pair in permutations([Bear, Player, Sticks, Trap], 2):
+        logger.debug(f"fill cm with {pair}")
+        collide_map[pair] = noop
+
+    # collide_map[(Bear  , Player)]   = noop
+    # collide_map[(Bear  , Sticks)]   = noop
+    collide_map[(Bear  , Trap)]     = drop  # remove trap, when bear touch trap
+    # collide_map[(Player, Bear)]   = noop
+    # collide_map[(Player, Sticks)] = noop
+    collide_map[(Player, Trap)]   = drop  # player sets traps. No damage him
+
+    # collide_map[(Sticks, Bear)]   = noop
+    # collide_map[(Sticks, Player)] = noop
+    collide_map[(Sticks, Sticks)] = drop
+    # collide_map[(Sticks, Trap)]   = noop
+    # how trap change object, that touch it
+    collide_map[(Trap  , Bear)]     = drop  #
+    collide_map[(Trap  , Player)]   = damageUnitByTrap
+    # collide_map[(Trap  , Sticks)]   = noop
+    collide_map[(Trap  , Trap)]     = drop
+
+    return collide_map
+
+__COLLIDE_MAP = create_collide_map()

@@ -1,5 +1,3 @@
-# Imports as usual
-
 import cocos.collision_model as cm
 import cocos.euclid as eu
 from cocos.director import director
@@ -30,6 +28,7 @@ import logging
 
 # does not affect any
 TILE_WIDTH = 15
+
 
 def followSpeed(subject:cm.CircleShape, subjectSpeed:int, target:cm.CircleShape):
     """

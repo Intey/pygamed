@@ -22,5 +22,5 @@ class Builder:
                 results.append(recipe.factory())
 
             return results
-            # check that all ingridients available 
+            # check that all ingridients available
             # if so, subtract resources, and create item
