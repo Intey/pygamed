@@ -3,5 +3,5 @@
 from domain.unit import Unit
 
 class Bear(Unit):
-    def __init__(self):
-        Unit.__init__(self)
+    def __init__(self, **kwargs):
+        Unit.__init__(self, **kwargs)
