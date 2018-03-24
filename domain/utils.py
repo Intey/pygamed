@@ -11,10 +11,10 @@ def collectResource(player, resource):
     print("collected {} of {}. rest {}".format(player.inventory[resource.name], resource.name, resource.value))
 
 
-def splitPartition(maxV, minV, parts=4):
+def splitPartition(minV:int, maxV:int, parts:int) -> list:
     """
-    generate distibution of @parts count integers, that lie in range(@maxV,
-    @minV).
+    Generate distibution of @parts count integers, that lie in range(@minV,
+    @maxV).
     Returned list has as first element @maxV, and as last @minV. values
     between distributed evenly.
     """

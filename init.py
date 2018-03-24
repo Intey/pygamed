@@ -8,6 +8,10 @@ from actor import Actor
 
 from random import random, randrange
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 WIDTH = 800
 HEIGHT = 600
 
@@ -39,20 +43,31 @@ def updateSticksCountSprite(sticks:Actor):
     """
     Update sticks sprite by count.
     """
-    # partition - prtn
-    keys = splitPartition(Sticks.MAX, Sticks.MIN, 4)
+
+    # map count to sprite. Distribute 4 point between MIN-MAX
+    keys = splitPartition(Sticks.MIN, Sticks.MAX, 4)
     spriteMap = {
             keys[0]: PImage('assets/sticks.png'),
             keys[1]: PImage('assets/sticks-mid.png'),
             keys[2]: PImage('assets/sticks-light.png'),
             keys[3]: PImage('assets/sticks-almost.png')
     }
-    vals = spriteMap.keys()
-    # if  50 < rest < 75 - show sticks-light
-    filtered = list(filter(lambda v: v - sticks.domain.value < 0, vals))
-    if not filtered:
-        key = min(vals)
-    else:
-        key = max(filtered)
-    print("got key {}, vals {}, real {}".format(key, filtered, sticks.domain.value))
+    key = selectKey(sticks.domain.value, keys)
     sticks.image = spriteMap[key]
+
+
+def selectKey(count:int, keys:list):
+    # if  50 < rest < 75 - show sticks-light
+    # get keys, that >= sticks.domain.value
+    filtered = list(filter(lambda key: key - count <= 0, keys))
+    # if count more than some key, get max key
+    key = keys[0]
+    if filtered:
+        # have some
+        key = max(filtered)
+    else:
+        # get lowest
+        key = keys[-1]
+    logger.debug(f"use sprite key {key} from mapped values {filtered}. Real sticks count - {count}")
+    return key
+
