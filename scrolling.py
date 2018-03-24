@@ -1,3 +1,11 @@
+"""
+scrolling.py - scroller game about you, bear, traps and sticks
+Usage:
+    scrolling.py [options]
+
+Options:
+    -d --debug  debug mode with logging
+"""
 import cocos.collision_model as cm
 import cocos.euclid as eu
 from cocos.director import director
@@ -26,9 +34,12 @@ from time import time
 from math import sqrt
 import logging
 
+from docopt import docopt
+
 # does not affect any
 TILE_WIDTH = 15
 
+logger = logging.getLogger(__name__)
 
 def followSpeed(subject:cm.CircleShape, subjectSpeed:int, target:cm.CircleShape):
     """
@@ -184,18 +195,19 @@ class ActorsLayer(ScrollableLayer):
                                                      cm.CircleShape), \
             f"can't addCollidable with {obj}"
         ScrollableLayer.add(self, obj)
-        print("addCollidable", obj.cshape.center)
+        logger.debug("addCollidable", obj.cshape.center)
         self.cm.add(obj)
 
     def gameOver(self):
-        print("DIED")
+        logger.debug("DIED")
         self.unschedule(self.update)
         pass
 
 
+
 class BearActor(Actor):
     def __init__(self, player, position=(0,0)):
-        Actor.__init__(self, getBearSprite(), position=position, domain=Bear())
+        Actor.__init__(self, getBearSprite(), position=position, domain=Bear(health=50))
         self.scale = 2
         self.player = player
         self.schedule_interval(self.update, .10)
@@ -214,8 +226,15 @@ class BearActor(Actor):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    logging.debug("start app")
+    args = docopt(__doc__, version="0.1")
+
+    level = logging.CRITICAL
+    if args['--debug']:
+        level = logging.DEBUG
+
+    logging.basicConfig(level=level)
+
+    logger.info("start scrolling")
 
     WIDTH = 800
     HEIGHT = 600

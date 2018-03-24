@@ -1,5 +1,6 @@
 attrs==17.4.0
 cocos2d==0.6.5
+docopt==0.6.2
 pluggy==0.6.0
 py==1.5.2
 pyglet==1.2.4
