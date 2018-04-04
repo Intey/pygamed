@@ -4,7 +4,7 @@
 Collide resposibility is return actions, that
 """
 
-from itertools import permutations
+from itertools import permutations, combinations_with_replacement
 from logging import getLogger
 from collections import defaultdict
 
@@ -26,7 +26,6 @@ def collide(left:Unit, right:Unit, distance:int):
     etc.
     """
 
-    logger.debug(f"collide: mapping: {__COLLIDE_MAP}")
     lcls = left.__class__
     rcls = right.__class__
     # left to right function
@@ -63,7 +62,11 @@ def slowDownUnit(trap:Trap, unit:Unit):
 def create_collide_map():
     collide_map = dict()
     # dummy fill
-    for pair in permutations([Bear, Player, Sticks, Trap], 2):
+
+    class_list = [Bear, Player, Sticks, Trap]
+    variants = set(list(permutations(class_list, 2)) + \
+                   list(combinations_with_replacement(class_list, 2)))
+    for pair in variants:
         logger.debug(f"fill cm with {pair}")
         collide_map[pair] = noop
 
