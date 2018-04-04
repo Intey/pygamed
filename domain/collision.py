@@ -56,6 +56,10 @@ def slowDownUnit(trap:Trap, unit:Unit):
     return unit_alive
 
 
+def hitByBear(bear: Bear, unit:Unit):
+    unit.hit(bear.power)
+    return unit.alive
+
 
 # function should return True, if second(right) argument shouldStay in game or
 # False if it should be removed
@@ -70,7 +74,7 @@ def create_collide_map():
         logger.debug(f"fill cm with {pair}")
         collide_map[pair] = noop
 
-    # collide_map[(Bear  , Player)]   = noop
+    collide_map[(Bear  , Player)]   = hitByBear
     # collide_map[(Bear  , Sticks)]   = noop
     collide_map[(Bear  , Trap)]     = drop  # remove trap, when bear touch trap
     # collide_map[(Player, Bear)]   = noop
