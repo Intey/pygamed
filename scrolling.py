@@ -13,75 +13,32 @@ from cocos.layer import ScrollingManager, ScrollableLayer, Layer
 from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
 from cocos.tiles import load
-from cocos.actions.move_actions import Move
 from pyglet.window import key
 
-from domain.player import Player
-from domain.trap import Trap
-from domain.bear import Bear
-from domain.sticks import Sticks
-from domain.collector import Collector
-from sprites import getBearSprite
-from init import generateSticks, generateTraps
-from actor import Actor
+from domain import Player
+from domain import Trap
+from domain import Bear
+from domain import Sticks
+from domain import Collector
+from domain.utils import Accelerator
+from actors import Actor, BearFactory, TrapFactory
+from actors import Event
+# from init import generateSticks, generateTraps
 #FIXME: WTF import
 from init import updateSticksCountSprite
 
 from gui.hud import HUD
 
 
-from time import time
-from math import sqrt
 import logging
 
 from docopt import docopt
+from utils.random import randomPos
 
 # does not affect any
 TILE_WIDTH = 15
 
 logger = logging.getLogger(__name__)
-
-def followSpeed(subject:cm.CircleShape, subjectSpeed:int, target:cm.CircleShape):
-    """
-    Return speed(and direction implicit) as x,y, with with se should move for
-    follow target.
-    """
-    distance = subject.distance(target)
-    if distance < 550 and distance > 15:
-
-        x = target.center.x - subject.center.x
-        y = target.center.y - subject.center.y
-        dir_size = sqrt(x**2 + y**2)
-        vel = x/dir_size, y/dir_size
-        return vel[0] * subjectSpeed, vel[1] * subjectSpeed
-    else:  # distance <= 15:
-        return 0, 0
-
-
-class Accelerator:
-    """Control speed function"""
-
-    def __init__(self, maxAccel, initAccel, stepAccel):
-        self.maxAccel = maxAccel
-        self.minAccel = initAccel
-        self.speed = initAccel
-        self.stepAccel = stepAccel
-
-    def accelerate(self):
-        """
-        Increment speed
-        """
-        if self.speed < self.maxAccel:
-            self.speed += self.stepAccel
-        if self.speed > self.maxAccel:
-            self.speed = self.maxAccel
-
-    def reset(self):
-        """
-        reset speed
-        """
-        self.speed = self.minAccel
-
 
 class ActorsLayer(ScrollableLayer):
     def __init__(self, playerObject, width, height, collideMap=None):
@@ -195,7 +152,7 @@ class ActorsLayer(ScrollableLayer):
                                                      cm.CircleShape), \
             f"can't addCollidable with {obj}"
         ScrollableLayer.add(self, obj)
-        logger.debug("addCollidable", obj.cshape.center)
+        logger.debug(f"addCollidable {obj.cshape.center}")
         self.cm.add(obj)
 
     def gameOver(self):
@@ -203,26 +160,6 @@ class ActorsLayer(ScrollableLayer):
         self.unschedule(self.update)
         pass
 
-
-
-class BearActor(Actor):
-    def __init__(self, player, position=(0,0)):
-        Actor.__init__(self, getBearSprite(), position=position, domain=Bear(health=50))
-        self.scale = 2
-        self.player = player
-        self.schedule_interval(self.update, .10)
-        self.move = Move()
-        # self.velocity = (0,0)
-        self.do(self.move)
-        self.accel = Accelerator(46, 5, 40)
-
-    def update(self, dt):
-        self.goTo(self.player)
-
-    def goTo(self, target:Actor):
-        self.accel.accelerate()
-        self.velocity = followSpeed(self.cshape, self.accel.speed, target.cshape)
-        self.setPos(self.position)
 
 
 if __name__ == "__main__":
@@ -251,15 +188,27 @@ if __name__ == "__main__":
                    domain=Player())  # ActorPlayer(collideMap)
 
     scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height)
-    scrollLayer.addCollidable(player)
-
-    generateTraps(scrollLayer)
-    generateSticks(scrollLayer)
     scroller.add(scrollLayer, z=2)
 
-    bear = BearActor(player, (100, 100))
+    scrollLayer.addCollidable(player)
 
-    scrollLayer.addCollidable(bear)
+    # generateTraps(scrollLayer)
+    # generateSticks(scrollLayer)
+
+    def layer_subscriber(event:Event):
+        logger.debug(f"handle event {event}")
+        if event.type == Event.CREATE_TYPE:
+            scrollLayer.addCollidable(event.payload)
+
+    bear_factory = BearFactory(WIDTH, HEIGHT, player)
+    bear_factory.subscribe(layer_subscriber)
+    for i in range(5):
+        bear_factory.create()
+
+    trap_factory = TrapFactory(WIDTH, HEIGHT)
+    trap_factory.subscribe(layer_subscriber)
+    for i in range(10):
+        trap_factory.create()
 
     scene = Scene(scroller)
 

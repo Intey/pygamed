@@ -3,10 +3,11 @@
 from domain.trap import Trap
 from domain.sticks import Sticks
 from domain.utils import splitPartition
-from actor import Actor
+from actors import Actor
 
 
-from random import random, randrange
+from random import randrange
+from utils.random import randomPos
 
 import logging
 
@@ -15,26 +16,24 @@ logger = logging.getLogger(__name__)
 WIDTH = 800
 HEIGHT = 600
 
-def randomPos(w, h):
-    return (int(random() * w), int(random() * h))
 
-
-def generateTraps(scrollLayer):
-    for i in range(0, 10):
-        trap = Actor('assets/trap.png',
-                     position=randomPos(WIDTH, HEIGHT),
-                     domain=Trap(randrange(1, 30),
-                                 randrange(Trap.MIN_RANGE, Trap.MAX_RANGE)))
-        scrollLayer.addCollidable(trap)
-
-
-def generateSticks(scrollLayer):
-    for i in range(0, 10):
-        sticks = Actor('assets/sticks.png',
-                       position=randomPos(WIDTH, HEIGHT),
-                       domain=Sticks(randrange(Sticks.MIN, Sticks.MAX)))
-        updateSticksCountSprite(sticks)
-        scrollLayer.addCollidable(sticks)
+# def trap_factory():
+#     return Actor('assets/trap.png',
+#                  position=randomPos(WIDTH, HEIGHT),
+#                  domain=Trap(randrange(1, 30),
+#                              randrange(Trap.MIN_RANGE, Trap.MAX_RANGE)))
+#
+#
+# def sticks_factory():
+#     return Actor('assets/sticks.png',
+#                  position=randomPos(WIDTH, HEIGHT),
+#                  domain=Sticks(randrange(Sticks.MIN, Sticks.MAX)))
+#     updateSticksCountSprite(sticks)
+#
+#
+# def bear_factory():
+#     pos = randomPos(WIDTH, HEIGHT)
+#     return BearActor(player, pos)
 
 
 # which sprite show when count has value

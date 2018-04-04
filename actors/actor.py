@@ -7,6 +7,7 @@ from cocos.sprite import Sprite
 TILE_WIDTH = 15
 
 class Actor(Sprite):
+
     def __init__(self, spriteFilepath:str, position:tuple=(0, 0), domain=None):
         Sprite.__init__(self, spriteFilepath)
         self.position = position
