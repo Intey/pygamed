@@ -5,9 +5,10 @@ food
 
 # TODO
 
-- animal spawner
-- animal hierarchy
-- trap crafting
-- win condition
-- trap slow down animals
-
+- [x] animal spawner
+- [ ] animal hierarchy
+- [ ] trap crafting
+- [ ] win condition
+- [ ] trap slow down animals
+- [ ] rifle, shooting
+- [ ] campfile, food
