@@ -103,16 +103,19 @@ class ActorsLayer(ScrollableLayer):
 
     def collisionHandling(self, lastRect, newRect):
         """
-        Handle collision of player/BearActor with traps
+        Handle collision of objects
         """
         # handling collisions with dynamic objects
         from domain.collision import collide
         for left, right in self.cm.iter_all_collisions():
+
             leftStay, rightStay = collide(left.domain, right.domain, left.cshape.distance(right.cshape))
             if not leftStay:
-                self.remove(left)
+                if self.__contains__(left):
+                    self.remove(left)
             if not rightStay:
-                self.remove(right)
+                if self.__contains__(right):
+                    self.remove(right)
             if not self.player.domain.alive:
                 self.gameOver()
 
