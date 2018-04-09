@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from domain.resource import Resource
+from domain.resource import ResourceMeta
 
 
-class Rope(metaclass=Resource):
+class Rope(metaclass=ResourceMeta):
     pass
 
 

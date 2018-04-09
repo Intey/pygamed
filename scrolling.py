@@ -6,42 +6,35 @@ Usage:
 Options:
     -d --debug  debug mode with logging
 """
+import logging
+
 import cocos.collision_model as cm
-import cocos.euclid as eu
 from cocos.director import director
-from cocos.layer import ScrollingManager, ScrollableLayer, Layer
+from cocos.layer import ScrollingManager, ScrollableLayer
 from cocos.mapcolliders import RectMapCollider
 from cocos.scene import Scene
 from cocos.tiles import load
+from docopt import docopt
 from pyglet.window import key
 
-from domain import Player
-from domain import Trap
-from domain import Bear
-from domain import Sticks
-from domain import Collector
-from domain.utils import Accelerator
-from actors import Actor, BearFactory, TrapFactory
+from actors import BearFactory, TrapFactory
 from actors import Event
-# from init import generateSticks, generateTraps
-#FIXME: WTF import
-from init import updateSticksCountSprite
-
+from actors import PlayerActor
+from actors.sticks_factory import SticksFactory
+from domain.utils import Accelerator
 from gui.hud import HUD
 
-
-import logging
-
-from docopt import docopt
-from utils.random import randomPos
+# from init import generateSticks, generateTraps
+# FIXME: WTF import
 
 # does not affect any
 TILE_WIDTH = 15
 
 logger = logging.getLogger(__name__)
 
+
 class ActorsLayer(ScrollableLayer):
-    def __init__(self, playerObject, width, height, collideMap=None):
+    def __init__(self, playerObject, width, height, collide_manager=None, collideMap=None):
         ScrollableLayer.__init__(self)
 
         self.height = height
@@ -55,14 +48,12 @@ class ActorsLayer(ScrollableLayer):
         self.collideMap = collideMap
 
         # dynamic objects collision. used in
-        self.cm = cm.CollisionManagerGrid(0.0, self.width, 0.0, self.height,
-                                          TILE_WIDTH, TILE_WIDTH)
 
         self.collectingSticks = False
         self.collectingStartTime = None
         # call update
-        self.collector = Collector()
         self.schedule(self.update)
+        self.cm = collide_manager
 
     def movementHandling(self, lastRect, dt):
         """
@@ -77,10 +68,10 @@ class ActorsLayer(ScrollableLayer):
         else:
             self.accelerator.reset()
 
-        dx = (keyboard[key.RIGHT] - keyboard[key.LEFT])\
-                * self.accelerator.speed * dt
-        dy = (keyboard[key.UP] - keyboard[key.DOWN])\
-                * self.accelerator.speed * dt
+        dx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) \
+             * self.accelerator.speed * dt
+        dy = (keyboard[key.UP] - keyboard[key.DOWN]) \
+             * self.accelerator.speed * dt
 
         newRect = lastRect.copy()
         newRect.x += dx
@@ -101,7 +92,7 @@ class ActorsLayer(ScrollableLayer):
                                                         newRect,
                                                         dx, dy)
 
-    def collisionHandling(self, lastRect, newRect):
+    def collisionHandling(self):
         """
         Handle collision of objects
         """
@@ -113,28 +104,13 @@ class ActorsLayer(ScrollableLayer):
             if not leftStay:
                 if self.__contains__(left):
                     self.remove(left)
+                    #self.cm.remove_tricky(left)
             if not rightStay:
                 if self.__contains__(right):
                     self.remove(right)
+                    #self.cm.remove_tricky(right)
             if not self.player.domain.alive:
                 self.gameOver()
-
-
-    def sticksCollectingHandling(self, dt):
-        playerActor = self.player
-        playerLogic = self.player.domain
-        if not keyboard[key.E]:
-            self.collector.stop()
-        else:
-            for maybeSticks in self.cm.objs_colliding(playerActor):
-                if hasattr(maybeSticks, "domain")\
-                        and isinstance(maybeSticks.domain, Sticks):
-                    sticks = maybeSticks.domain
-                    self.collector.collect(playerLogic, sticks)
-                    if maybeSticks.domain.value <= 0:
-                        self.remove(maybeSticks)
-                    # injected in generateSticks. update sprite image
-                    updateSticksCountSprite(maybeSticks)
 
     def update(self, dt):
         # update list of collidable objects
@@ -142,11 +118,11 @@ class ActorsLayer(ScrollableLayer):
         for z, node in self.children:
             self.cm.add(node)
 
-        lastRect = self.player.get_rect()
-        newRect, dx, dy = self.movementHandling(lastRect, dt)
+        # lastRect = self.player.get_rect()
+        # self.movementHandling(lastRect, dt)
 
-        self.collisionHandling(lastRect, newRect)
-        self.sticksCollectingHandling(dt)
+        self.collisionHandling()
+        # self.sticksCollectingHandling(dt)
         # self.collideMapHandling(lastRect, newRect, dx, dy)
         scroller.set_focus(self.player.x, self.player.y)
 
@@ -164,7 +140,6 @@ class ActorsLayer(ScrollableLayer):
         pass
 
 
-
 if __name__ == "__main__":
     args = docopt(__doc__, version="0.1")
 
@@ -179,39 +154,48 @@ if __name__ == "__main__":
     WIDTH = 800
     HEIGHT = 600
     director.init(width=WIDTH, height=HEIGHT, autoscale=False, resizable=False)
+    keyboard = key.KeyStateHandler()
+    director.window.push_handlers(keyboard)
     mapTMX = load("assets/map.tmx")
     mapLayer = mapTMX["terrain"]
     scroller = ScrollingManager()
-    mapLayer.set_cell_opacity(3,3, 0)
-    mapLayer.set_cell_opacity(4,4, 10000)
+    mapLayer.set_cell_opacity(3, 3, 0)
+    mapLayer.set_cell_opacity(4, 4, 10000)
     scroller.add(mapLayer, z=1)
     # scroller.add(collideMap, z=1)
+    collide_manager = cm.CollisionManagerGrid(0.0, mapLayer.px_width, 0.0, mapLayer.px_height,
+                                              TILE_WIDTH*3, TILE_WIDTH*3)
 
-    player = Actor('assets/user.png', position=(20, 20),
-                   domain=Player())  # ActorPlayer(collideMap)
+    player = PlayerActor(collide_manager, keyboard)  # ActorPlayer(collideMap)
 
-    scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height)
+    scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height, collide_manager)
     scroller.add(scrollLayer, z=2)
+
+    player.set_layer(scrollLayer)
 
     scrollLayer.addCollidable(player)
 
-    # generateTraps(scrollLayer)
-    # generateSticks(scrollLayer)
 
-    def layer_subscriber(event:Event):
+    def layer_subscriber(event: Event):
         logger.debug(f"handle event {event}")
         if event.type == Event.CREATE_TYPE:
             scrollLayer.addCollidable(event.payload)
 
+
     bear_factory = BearFactory(WIDTH, HEIGHT, player)
     bear_factory.subscribe(layer_subscriber)
-    for i in range(5):
+    for i in range(3):
         bear_factory.create()
 
     trap_factory = TrapFactory(WIDTH, HEIGHT)
     trap_factory.subscribe(layer_subscriber)
-    for i in range(10):
+    for i in range(3):
         trap_factory.create()
+
+    sticks_factory = SticksFactory(WIDTH, HEIGHT)
+    sticks_factory.subscribe(layer_subscriber)
+    for i in range(3):
+        sticks_factory.create()
 
     scene = Scene(scroller)
 
@@ -220,6 +204,4 @@ if __name__ == "__main__":
     hud = HUD(player, WIDTH, HEIGHT)
     scene.add(hud, z=3)
 
-    keyboard = key.KeyStateHandler()
-    director.window.push_handlers(keyboard)
     director.run(scene)
