@@ -21,11 +21,7 @@ from actors import BearFactory, TrapFactory
 from actors import Event
 from actors import PlayerActor
 from actors.sticks_factory import SticksFactory
-from domain.utils import Accelerator
 from gui.hud import HUD
-
-# from init import generateSticks, generateTraps
-# FIXME: WTF import
 
 # does not affect any
 TILE_WIDTH = 15
@@ -40,46 +36,15 @@ class ActorsLayer(ScrollableLayer):
         self.height = height
         self.width = width
         self.player = playerObject
-        self.accelerator = Accelerator(150, 5, 40)
 
         # collision with map (static objects)
         self.mapCollider = RectMapCollider()
         self.mapCollider.on_bump_handler = self.mapCollider.on_bump_slide
         self.collideMap = collideMap
 
-        # dynamic objects collision. used in
-
-        self.collectingSticks = False
-        self.collectingStartTime = None
         # call update
         self.schedule(self.update)
         self.cm = collide_manager
-
-    def movementHandling(self, lastRect, dt):
-        """
-        Controls user input in 'movement' aspect.
-        """
-        dx = self.player.velocity[0]
-        dy = self.player.velocity[1]
-
-        if keyboard[key.UP] + keyboard[key.DOWN] + keyboard[key.LEFT] + \
-                keyboard[key.RIGHT] > 0:
-            self.accelerator.accelerate()
-        else:
-            self.accelerator.reset()
-
-        dx = (keyboard[key.RIGHT] - keyboard[key.LEFT]) \
-             * self.accelerator.speed * dt
-        dy = (keyboard[key.UP] - keyboard[key.DOWN]) \
-             * self.accelerator.speed * dt
-
-        newRect = lastRect.copy()
-        newRect.x += dx
-        newRect.y += dy
-
-        self.player.setPos(newRect.center)
-
-        return (newRect, dx, dy)
 
     def collideMapHandling(self, lastRect, newRect, dx, dy):
         """
@@ -104,11 +69,11 @@ class ActorsLayer(ScrollableLayer):
             if not leftStay:
                 if self.__contains__(left):
                     self.remove(left)
-                    #self.cm.remove_tricky(left)
+                    # self.cm.remove_tricky(left)
             if not rightStay:
                 if self.__contains__(right):
                     self.remove(right)
-                    #self.cm.remove_tricky(right)
+                    # self.cm.remove_tricky(right)
             if not self.player.domain.alive:
                 self.gameOver()
 
@@ -117,9 +82,6 @@ class ActorsLayer(ScrollableLayer):
         self.cm.clear()
         for z, node in self.children:
             self.cm.add(node)
-
-        # lastRect = self.player.get_rect()
-        # self.movementHandling(lastRect, dt)
 
         self.collisionHandling()
         # self.sticksCollectingHandling(dt)
@@ -164,7 +126,7 @@ if __name__ == "__main__":
     scroller.add(mapLayer, z=1)
     # scroller.add(collideMap, z=1)
     collide_manager = cm.CollisionManagerGrid(0.0, mapLayer.px_width, 0.0, mapLayer.px_height,
-                                              TILE_WIDTH*3, TILE_WIDTH*3)
+                                              TILE_WIDTH * 3, TILE_WIDTH * 3)
 
     player = PlayerActor(collide_manager, keyboard)  # ActorPlayer(collideMap)
 
