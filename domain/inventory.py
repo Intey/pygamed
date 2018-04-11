@@ -13,7 +13,7 @@ class Inventory:
 
     def add(self, *resources):
         for resource in resources:
-            name = resource.name
+            name = resource.name.lower()
             if self.items.get(name):
                 self.items[name] += resource.value
             else:

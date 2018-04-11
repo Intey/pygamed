@@ -10,7 +10,7 @@ class ResourceMeta(type):
         Metaclass for n-game resources. Whe create class wth metaclass=Resource,
         it's create `name` and `count` fields in "derived" classes.
         """
-        obj = type.__call__(self, *args)
+        obj = type.__call__(self)
         setattr(obj, 'name', obj.__class__.__name__.lower())
         count = args[0] if len(args) == 1 else 0
         setattr(obj, 'value', count)
