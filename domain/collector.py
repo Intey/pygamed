@@ -1,3 +1,4 @@
+from math import ceil, floor
 from time import time
 
 from domain.player import Player
@@ -32,7 +33,7 @@ class Collector:
         self.elapsed += dt
 
         if self.elapsed >= 1.0:
-            collect_count = player.collectSpeed * self.elapsed
+            collect_count = player.collectSpeed * floor(self.elapsed)
             collected = 0
             if resource.value < collect_count:
                 collected = resource.value
@@ -42,4 +43,4 @@ class Collector:
                 resource.value -= collect_count
 
             player.inventory.add(Resource(resource.name, collected))
-            self.elapsed = 0
+            self.elapsed = round(self.elapsed % 1, 1)

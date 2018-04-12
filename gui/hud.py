@@ -1,9 +1,11 @@
 from cocos.layer import Layer
-from cocos.text import Label
 from cocos.layer.util_layers import ColorLayer
+from cocos.text import Label
+
 
 class HUD(Layer):
     """ Game HUD """
+
     def __init__(self, player, width, height):
         Layer.__init__(self)
         self.width = width
@@ -22,7 +24,7 @@ class HUD(Layer):
 
         color = (73, 106, 44, 255)
         hudBackground = ColorLayer(*color, width=self.width, height=25)
-        hudBackground.position= (0, 0)
+        hudBackground.position = (0, 0)
         self.add(hudBackground)
         self.add(msg, name='msg')
         self.schedule(self.update)
@@ -33,6 +35,5 @@ class HUD(Layer):
         label = self.get('msg').element
         label.begin_update()
         label.text = 'health {}, sticks: {}'.format(hp,
-                                                    p.inventory.get('sticks', 0))
+                                                    p.inventory.get('sticks'))
         label.end_update()
-
