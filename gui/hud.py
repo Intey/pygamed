@@ -10,7 +10,7 @@ class HUD(Layer):
         self.height = height
         self.player = player.domain
         msg = Label('health %s, sticks: %s' % (self.player.health,
-                                               self.player.inventory.get('sticks', 0)),
+                                               self.player.inventory.get('sticks')),
                     font_name='somebitch',
                     anchor_x='left',
                     anchor_y='bottom',  # really - it's top of screen

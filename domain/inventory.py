@@ -5,11 +5,12 @@ class Inventory:
     - Contains items, that unit carry
     - Manage resources, stored in it
     """
+
     def __init__(self):
         self.items = {}
 
-    def __getitem__(self, key):
-        return self.items.get(key, None)
+    def get(self, key, default=0.0):
+        return self.items.get(key.lower(), default)
 
     def add(self, *resources):
         for resource in resources:
@@ -25,7 +26,7 @@ class Inventory:
         false"""
         for k, v in resources.items():
             # check that all resources exists
-            count = self.items.get(k, 0) 
+            count = self.items.get(k, 0)
             if count < v:
                 return False
 

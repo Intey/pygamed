@@ -41,7 +41,7 @@ class PlayerActor(Actor):
                 if hasattr(maybeSticks, "domain") \
                         and isinstance(maybeSticks.domain, Sticks):
                     sticks = maybeSticks.domain
-                    self.collector.collect(player_logic, sticks)
+                    self.collector.collect(player_logic, sticks, dt)
                     if sticks.value <= 0 and self.layer.__contains__(maybeSticks):
                         self.layer.remove(maybeSticks)
                     # injected in generateSticks. update sprite image
