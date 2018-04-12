@@ -23,7 +23,7 @@ class PlayerActor(Actor):
         self.cm = collide_manager
         self.key_handler = keyboard_handler
         self.schedule(self.update)
-        self.collector = Collector()
+        self.collector = Collector(2)
         self.accelerator = Accelerator(150, 5, 40)
         self.layer = None
 

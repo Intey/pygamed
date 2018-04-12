@@ -3,7 +3,7 @@ from domain import Collector, Sticks, Player
 
 def test_collector():
     p = Player()
-    c = Collector()
+    c = Collector(2)
     r = Sticks(20)
     c.collect(p, r, 1.0)
     assert r.value == 18
@@ -16,7 +16,7 @@ def test_collector():
 
 def test_collector_continuation():
     p = Player()
-    c = Collector()
+    c = Collector(2)
     r = Sticks(20)
 
     c.collect(p, r, 0.5)
@@ -41,7 +41,7 @@ def test_collector_continuation():
 
 def test_collector_stopping():
     p = Player()
-    c = Collector()
+    c = Collector(2)
     r = Sticks(20)
 
     c.collect(p, r, 0.8)
@@ -53,7 +53,7 @@ def test_collector_stopping():
 
 def test_collector_float():
     p = Player()
-    c = Collector()
+    c = Collector(2)
     r = Sticks(20)
 
     c.collect(p, r, 1.5)

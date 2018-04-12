@@ -11,6 +11,4 @@ class Player(Unit):
     def __init__(self, health=100):
 
         Unit.__init__(self, health=health)
-        # TODO: extract to collector
-        self.collectSpeed = 2
         self.inventory = Inventory()

@@ -10,9 +10,10 @@ class Collector:
     Provide logic for collecting resources for player. Use internal timer with incoming dt
     """
 
-    def __init__(self):
+    def __init__(self, speed):
         self.running = False
         self.elapsed = 0
+        self.collectSpeed = speed
 
     def start(self):
         self.running = True
@@ -33,7 +34,7 @@ class Collector:
         self.elapsed += dt
 
         if self.elapsed >= 1.0:
-            collect_count = player.collectSpeed * floor(self.elapsed)
+            collect_count = self.collectSpeed * floor(self.elapsed)
             collected = 0
             if resource.value < collect_count:
                 collected = resource.value
