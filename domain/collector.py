@@ -1,7 +1,5 @@
-from math import ceil, floor
-from time import time
+from math import floor
 
-from domain.player import Player
 from domain.resource import Resource
 
 
@@ -23,7 +21,7 @@ class Collector:
         self.running = False
         self.elapsed = 0
 
-    def collect(self, player: Player, resource: Resource, dt=0.1):
+    def collect(self, resource: Resource, dt=0.1):
         """
         Collect resource in player inventory. Collecting use dt as collection speed and player
         about speed, and count. Should be called in update every time
@@ -43,5 +41,8 @@ class Collector:
                 collected = collect_count
                 resource.value -= collect_count
 
-            player.inventory.add(Resource(resource.name, collected))
             self.elapsed = round(self.elapsed % 1, 1)
+
+            return Resource(resource.name, collected)
+        else:
+            return Resource(resource.name, 0)

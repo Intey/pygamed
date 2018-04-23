@@ -5,13 +5,13 @@ def test_collector():
     p = Player()
     c = Collector(2)
     r = Sticks(20)
-    c.collect(p, r, 1.0)
+    collected = c.collect(r, 1.0)
     assert r.value == 18
-    assert p.inventory.get('sticks') == 2
+    assert collected.value == 2
 
-    c.collect(p, r, 2)
+    collected = c.collect(r, 2)
     assert r.value == 14
-    assert p.inventory.get('sticks') == 6
+    assert collected.value == 4
 
 
 def test_collector_continuation():
@@ -19,24 +19,23 @@ def test_collector_continuation():
     c = Collector(2)
     r = Sticks(20)
 
-    c.collect(p, r, 0.5)
+    collected = c.collect(r, 0.5)
     assert r.value == 20
-    assert p.inventory.get('sticks') == 0
+    assert collected.value == 0
 
-    c.collect(p, r, 0.5)
+    collected = c.collect(r, 0.5)
     assert r.value == 18
-    assert p.inventory.get('sticks') == 2
+    assert collected.value == 2
 
-    c.collect(p, r, 1.1)
+    collected = c.collect(r, 1.1)
     assert r.value == 16, "1.1 delta should collect only as 1.0"
-    assert p.inventory.get('sticks') == 4
+    assert collected.value == 2
 
     assert c.elapsed == 0.1, "collector should save rest time if not stopped"
 
-    c.collect(p, r, 0.9)
-
+    collected = c.collect(r, 0.9)
     assert r.value == 14, "should continue collect after over second collection"
-    assert p.inventory.get('sticks') == 6
+    assert collected.value == 2
 
 
 def test_collector_stopping():
@@ -44,11 +43,12 @@ def test_collector_stopping():
     c = Collector(2)
     r = Sticks(20)
 
-    c.collect(p, r, 0.8)
+    n1 = c.collect(r, 0.8)
     c.stop()  # player release collection key
-    c.collect(p, r, 0.3)
+    n2 = c.collect(r, 0.3)
     assert r.value == 20
-    assert p.inventory.get('sticks') == 0
+    assert n1.value == 0
+    assert n2.value == 0
 
 
 def test_collector_float():
@@ -56,6 +56,7 @@ def test_collector_float():
     c = Collector(2)
     r = Sticks(20)
 
-    c.collect(p, r, 1.5)
+    res = c.collect(r, 1.5)
     assert r.value == 18
-    assert p.inventory.get('sticks') == 2
+    assert res.name == r.name
+    assert res.value == 2

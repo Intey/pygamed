@@ -23,7 +23,6 @@ class PlayerActor(Actor):
         self.cm = collide_manager
         self.key_handler = keyboard_handler
         self.schedule(self.update)
-        self.collector = Collector(2)
         self.accelerator = Accelerator(150, 5, 40)
         self.layer = None
 
@@ -35,13 +34,13 @@ class PlayerActor(Actor):
         player_logic = self.domain
         keyboard = self.key_handler
         if not keyboard[key.E]:
-            self.collector.stop()
+            player_logic.stop_collecting()
         else:
             for maybeSticks in self.cm.objs_colliding(player_actor):
                 if hasattr(maybeSticks, "domain") \
                         and isinstance(maybeSticks.domain, Sticks):
                     sticks = maybeSticks.domain
-                    self.collector.collect(player_logic, sticks, dt)
+                    player_logic.collect(sticks, dt)
                     if sticks.value <= 0 and self.layer.__contains__(maybeSticks):
                         self.layer.remove(maybeSticks)
                     # injected in generateSticks. update sprite image
