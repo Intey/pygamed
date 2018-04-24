@@ -3,3 +3,4 @@ __pycache__
 .ropeproject/
 .pytest_cache/
 *.pyc
+.idea/

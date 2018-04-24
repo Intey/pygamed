@@ -7,7 +7,7 @@ food
 
 - [x] animal spawner
 - [ ] animal hierarchy
-- [ ] trap crafting
+- [x] trap crafting
 - [ ] win condition
 - [ ] trap slow down animals
 - [ ] rifle, shooting
