@@ -12,3 +12,9 @@ food
 - [ ] trap slow down animals
 - [ ] rifle, shooting
 - [ ] campfile, food
+- [ ] true map level
+- [ ] scenario, campain
+
+# BUGS
+
+- [ ] multiple collide
