@@ -1,6 +1,6 @@
 from .bear import Bear
 from .bot import Bot
-from .builder import Builder
+from .builder import Builder, BuildException
 from .collector import Collector
 from .collision import collide
 from .inventory import Inventory

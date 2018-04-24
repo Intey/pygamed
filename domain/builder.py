@@ -1,4 +1,7 @@
 
+class BuildException(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)
 
 class Builder:
     """ Responsibility:
@@ -22,7 +25,7 @@ class Builder:
         """
         recipe = self.recipes.get(recipe_name)
         if recipe is None:
-            return Exception(f"No recipe for {recipe_name}")
+            raise BuildException(f"No recipe for {recipe_name}")
         if not self.inventory.subtract(recipe.ingridients):
-            raise Exception(f"No resources for recipe {recipe}")
+            raise BuildException(f"No resources for recipe {recipe}")
         return recipe.factory()

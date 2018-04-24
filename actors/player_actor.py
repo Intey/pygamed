@@ -5,7 +5,7 @@ from cocos.layer import ScrollableLayer
 from pyglet.window import key
 from pyglet.window.key import KeyStateHandler
 
-from domain import Builder, Recipe, Trap
+from domain import Builder, Recipe, Trap, BuildException
 from domain import Player, Sticks
 from domain.utils import Accelerator
 from .actor import Actor
@@ -65,6 +65,7 @@ class PlayerActor(Actor):
             return tuple(res)
 
             return 1 if x >= 0 else -1
+
         direction = normalize( (last_rect.x - new_rect.x,
                                 last_rect.y - new_rect.y))
 
@@ -93,7 +94,7 @@ class PlayerActor(Actor):
                     self.layer.addCollidable(actor)
                     # yeah, we had create something
                     self.last_create_delta = .01
-                except Exception as e:
+                except BuildException as e:
                     print(e)
 
         # Builder part: cooldown finished. Reset
