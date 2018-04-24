@@ -1,26 +1,28 @@
+
+
 class Builder:
     """ Responsibility:
     - create instance of craft object
     - controller between Inventory, Recipe and Player
     """
-    def __init__(self, inventory, recipies):
+
+    def __init__(self, inventory, recipes):
         """ define which reciepes can be build with this builder """
-        self.recipies = recipies
+        self.recipes = recipes
         self.inventory = inventory
+        self.elapsed = 0
+        self.running = False
+        self.speed = 1.0
 
-
-    def build(self, recipe_name):
-        """ craft
+    def create(self, recipe_name: str):
         """
-        recipe = self.recipies.get(recipe_name)
+        Creates object for recipe_name. Can raise Exception if no recipe or no resources
+        :param recipe_name: name of recipe, that was builded
+        :return: BuildProto object
+        """
+        recipe = self.recipes.get(recipe_name)
         if recipe is None:
-            print("can't craete %s" % recipe_name)
-            return
-        if self.inventory.subtract(recipe.ingridients):
-            results = []
-            for i in range(recipe.product_count):
-                results.append(recipe.factory())
-
-            return results
-            # check that all ingridients available
-            # if so, subtract resources, and create item
+            return Exception(f"No recipe for {recipe_name}")
+        if not self.inventory.subtract(recipe.ingridients):
+            raise Exception(f"No resources for recipe {recipe}")
+        return recipe.factory()

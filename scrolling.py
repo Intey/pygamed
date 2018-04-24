@@ -24,7 +24,7 @@ from actors.sticks_factory import SticksFactory
 from gui.hud import HUD
 
 # does not affect any
-TILE_WIDTH = 15
+TILE_WIDTH = 25
 
 logger = logging.getLogger(__name__)
 

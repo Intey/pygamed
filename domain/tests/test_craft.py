@@ -6,13 +6,6 @@ from domain.sticks import Sticks
 from domain.trap import Trap
 
 
-def createTrapFactory(power):
-    def trapFactory():
-        return Trap(power)
-
-    return trapFactory
-
-
 def test_subtracting():
     inventory = Inventory()
     sticks = Sticks(3)
@@ -50,13 +43,12 @@ def test_craft_trap():
     inventory.add(sticks)
     inventory.add(rope)
 
-    factory = createTrapFactory(10)
+    factory = lambda: Trap(10)
     justTrap = Recipe(factory, sticks=4, rope=1)
 
     builder = Builder(inventory, {'justTrap': justTrap})
-    result = builder.build('justTrap')
-
-    assert inventory.get('sticks') == 6, "By recipe, 4 Sticks should be subtracted"
-    assert inventory.get('rope') == 2, "By recipe, 1 Rope should be subtracted"
+    trap = builder.create('justTrap')
     expect = factory()
-    assert result == [expect], "Expect build one trap"
+    assert trap == expect, "Expect build one trap"
+    assert inventory.get('sticks') == 6,"By recipe, 4 Sticks should be subtracted"
+    assert inventory.get('rope') == 2, "By recipe, 1 Rope should be subtracted"

@@ -22,7 +22,7 @@ class Inventory:
 
     def subtract(self, resources):
         """ subtract resources from inventory. Used for building, crafting.
-        Return true, if all resources available and subtracted. Otherwice - 
+        Return true, if all resources available and subtracted. Otherwice -
         false"""
         for k, v in resources.items():
             # check that all resources exists
@@ -34,5 +34,7 @@ class Inventory:
             count = self.items[k] - v
             # it's okey.
             self.items[k] = count
-
         return True
+
+    def __repr__(self):
+        return str(self.items)
