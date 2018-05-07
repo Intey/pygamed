@@ -1,7 +1,6 @@
 from abc import abstractmethod, ABCMeta
 
 from cocos.collision_model import CollisionManagerGrid
-from cocos.layer import ScrollableLayer
 from pyglet.window import key
 from pyglet.window.key import KeyStateHandler
 
@@ -29,13 +28,9 @@ class PlayerActor(Actor):
         self.key_handler = keyboard_handler
         self.schedule(self.update)
         self.accelerator = Accelerator(150, 5, 40)
-        self.layer = None
         self.builder = Builder(self.domain.inventory, {"trap": Recipe(lambda: Trap(10), sticks=4)})
         self.last_create_delta = 0
         self.create_cooldown = 0.5
-
-    def set_layer(self, layer: ScrollableLayer):
-        self.layer = layer
 
     def update(self, dt):
         player_actor = self
@@ -109,7 +104,7 @@ class PlayerActor(Actor):
         Controls user input in 'movement' aspect.
         """
         keyboard = self.key_handler
-        dx, dy = self.velocity
+        # dx, dy = self.velocity
         if keyboard[key.UP] + keyboard[key.DOWN] + keyboard[key.LEFT] + \
                 keyboard[key.RIGHT] > 0:
             self.accelerator.accelerate()
@@ -120,9 +115,16 @@ class PlayerActor(Actor):
         dy = (keyboard[key.UP] - keyboard[key.DOWN]) \
              * self.accelerator.speed * dt
 
+
         new_rect = last_rect.copy()
         new_rect.x += dx
         new_rect.y += dy
 
+        # change new_rect to not overlap collide-map
+        # dx_f, dy_f - changes of velocity?
+        dx_f, dy_f = self.layer.collide_map(last_rect, new_rect, dx, dy)
+
         self.setPos(new_rect.center)
         return new_rect
+
+

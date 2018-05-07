@@ -17,7 +17,7 @@ from cocos.tiles import load
 from docopt import docopt
 from pyglet.window import key
 
-from actors import BearFactory, TrapFactory
+from actors import BearFactory, TrapFactory, BearActor
 from actors import Event
 from actors import PlayerActor
 from actors.sticks_factory import SticksFactory
@@ -46,16 +46,18 @@ class ActorsLayer(ScrollableLayer):
         self.schedule(self.update)
         self.cm = collide_manager
 
-    def collideMapHandling(self, lastRect, newRect, dx, dy):
+    def collide_map(self, lastRect, newRect, dx, dy):
         """
         Handling collisions with static objects(trees, rocks, etc.)
         """
         if self.collideMap:
             collider = self.mapCollider
-            self.player.velocity = collider.collide_map(self.collideMap,
-                                                        lastRect,
-                                                        newRect,
-                                                        dx, dy)
+            return collider.collide_map(self.collideMap,
+                                        lastRect,
+                                        newRect,
+                                        dx, dy)
+        else:
+            return 0,0
 
     def collisionHandling(self):
         """
@@ -64,7 +66,6 @@ class ActorsLayer(ScrollableLayer):
         # handling collisions with dynamic objects
         from domain.collision import collide
         for left, right in self.cm.iter_all_collisions():
-
             leftStay, rightStay = collide(left.domain, right.domain, left.cshape.distance(right.cshape))
             if not leftStay:
                 if self.__contains__(left):
@@ -84,14 +85,13 @@ class ActorsLayer(ScrollableLayer):
             self.cm.add(node)
 
         self.collisionHandling()
-        # self.sticksCollectingHandling(dt)
-        # self.collideMapHandling(lastRect, newRect, dx, dy)
         scroller.set_focus(self.player.x, self.player.y)
 
     def addCollidable(self, obj):
         assert hasattr(obj, "cshape") and isinstance(obj.cshape,
                                                      cm.CircleShape), \
             f"can't addCollidable with {obj}"
+        obj.link_layer(self)
         ScrollableLayer.add(self, obj)
         logger.debug(f"addCollidable {obj.cshape.center}")
         self.cm.add(obj)
@@ -120,9 +120,8 @@ if __name__ == "__main__":
     director.window.push_handlers(keyboard)
     mapTMX = load("assets/map.tmx")
     mapLayer = mapTMX["terrain"]
+    collideLayer = mapTMX['blocks']
     scroller = ScrollingManager()
-    mapLayer.set_cell_opacity(3, 3, 0)
-    mapLayer.set_cell_opacity(4, 4, 10000)
     scroller.add(mapLayer, z=1)
     # scroller.add(collideMap, z=1)
     collide_manager = cm.CollisionManagerGrid(0.0, mapLayer.px_width, 0.0, mapLayer.px_height,
@@ -130,10 +129,8 @@ if __name__ == "__main__":
 
     player = PlayerActor(collide_manager, keyboard)  # ActorPlayer(collideMap)
 
-    scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height, collide_manager)
+    scrollLayer = ActorsLayer(player, mapLayer.px_width, mapLayer.px_height, collide_manager, collideLayer)
     scroller.add(scrollLayer, z=2)
-
-    player.set_layer(scrollLayer)
 
     scrollLayer.addCollidable(player)
 
@@ -144,17 +141,19 @@ if __name__ == "__main__":
             scrollLayer.addCollidable(event.payload)
 
 
-    bear_factory = BearFactory(WIDTH, HEIGHT, player)
-    bear_factory.subscribe(layer_subscriber)
-    for i in range(3):
-        bear_factory.create()
+    bear_factory = BearFactory(mapLayer.px_width, mapLayer.px_height, player)
+    bear = BearActor(player, (200, 200))
+    layer_subscriber(Event(Event.CREATE_TYPE, bear))
+    # bear_factory.subscribe(layer_subscriber)
+    # for i in range(15):
+    #     bear_factory.create()
 
-    trap_factory = TrapFactory(WIDTH, HEIGHT)
+    trap_factory = TrapFactory(mapLayer.px_width, mapLayer.px_height)
     trap_factory.subscribe(layer_subscriber)
     for i in range(3):
         trap_factory.create()
 
-    sticks_factory = SticksFactory(WIDTH, HEIGHT)
+    sticks_factory = SticksFactory(mapLayer.px_width, mapLayer.px_height)
     sticks_factory.subscribe(layer_subscriber)
     for i in range(3):
         sticks_factory.create()

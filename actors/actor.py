@@ -14,7 +14,7 @@ class Actor(Sprite):
         self.cshape = CircleShape(eu.Vector2(*self.position), TILE_WIDTH)
         self.setPos(self.position)
         self.domain = domain
-        self.velocity = 0, 0
+        self.layer = None
 
     def setPos(self, position:tuple):
         """
@@ -24,3 +24,6 @@ class Actor(Sprite):
         assert isinstance(position, tuple), "should be tuple"
         self.position = position
         self.cshape.center = eu.Vector2(*position)
+
+    def link_layer(self, layer):
+        self.layer = layer
