@@ -1,3 +1,3 @@
 from .accelerator import Accelerator
-from .utils import collectResource, splitPartition
+from .utils import splitPartition
 

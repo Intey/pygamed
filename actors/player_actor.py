@@ -28,7 +28,6 @@ class PlayerActor(Actor):
         self.key_handler = keyboard_handler
         self.schedule(self.update)
         self.accelerator = Accelerator(150, 5, 40)
-        self.builder = Builder(self.domain.inventory, {"trap": Recipe(lambda: Trap(10), sticks=4)})
         self.last_create_delta = 0
         self.create_cooldown = 0.5
 
@@ -80,7 +79,7 @@ class PlayerActor(Actor):
             # Builder part: cooldowned?
             if self.last_create_delta == 0:
                 try:
-                    trap_domain = self.builder.create('trap')
+                    trap_domain = self.domain.create(self.domain.RECIPE_SLOW_TRAP)
                     offset = ((TILE_WIDTH + Trap.MAX_RANGE) * direction[0],
                               (TILE_WIDTH + Trap.MAX_RANGE) * direction[1])
                     trap_pos =(self.position[0] + offset[0],

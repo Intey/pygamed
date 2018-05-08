@@ -12,7 +12,7 @@ class HUD(Layer):
         self.height = height
         self.player = player.domain
         msg = Label('health %s, sticks: %s' % (self.player.health,
-                                               self.player.inventory.get('sticks')),
+                                               self.player._inventory.get('sticks')),
                     font_name='somebitch',
                     anchor_x='left',
                     anchor_y='bottom',  # really - it's top of screen
@@ -35,5 +35,5 @@ class HUD(Layer):
         label = self.get('msg').element
         label.begin_update()
         label.text = 'health {}, sticks: {}'.format(hp,
-                                                    p.inventory.get('sticks'))
+                                                    p._inventory.get('sticks'))
         label.end_update()

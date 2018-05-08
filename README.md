@@ -6,14 +6,15 @@ food
 # TODO
 
 - [x] animal spawner
-- [ ] animal hierarchy
 - [x] trap crafting
 - [ ] win condition
-- [ ] trap slow down animals
+- [x] trap slow down animals
 - [ ] rifle, shooting
 - [ ] campfile, food
 - [ ] true map level
 - [ ] scenario, campain
+- [ ] domain values should dictate which metricts use in framework
+- [ ] effects system
 
 # BUGS
 

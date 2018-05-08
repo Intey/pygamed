@@ -8,12 +8,13 @@ from itertools import permutations, combinations_with_replacement
 from logging import getLogger
 from collections import defaultdict
 
-from domain.player import Player
-from domain.trap import Trap
-from domain.bear import Bear
-from domain.sticks import Sticks
-from domain.unit import Unit
-from domain.noop import noop
+from .player import Player
+from .trap import Trap
+from .slow_trap import SlowTrap
+from .bear import Bear
+from .sticks import Sticks
+from .unit import Unit
+from .noop import noop
 
 
 logger = getLogger(__name__)
@@ -49,6 +50,7 @@ def damageUnitByTrap(trap:Trap, unit:Unit):
     logger.debug(f"damage {trap.power}:{oldh} -> {unit.health}")
     return unit.alive
 
+
 def slowDownUnit(trap:Trap, unit:Unit):
     unit_alive = damageUnitByTrap(trap, unit)
     if unit_alive:
@@ -61,13 +63,19 @@ def hitByBear(bear: Bear, unit:Unit):
     return unit.alive
 
 
+def slowdownBeaer(trap: SlowTrap, bear: Bear):
+    damageUnitByTrap(trap, bear)
+    bear.max_speed = trap.max_speed
+    return True
+
+
 # function should return True, if second(right) argument shouldStay in game or
 # False if it should be removed
 def create_collide_map():
     collide_map = dict()
     # dummy fill
 
-    class_list = [Bear, Player, Sticks, Trap]
+    class_list = [Bear, Player, Sticks, Trap, SlowTrap]
     variants = set(list(permutations(class_list, 2)) + \
                    list(combinations_with_replacement(class_list, 2)))
     for pair in variants:
@@ -76,21 +84,27 @@ def create_collide_map():
 
     collide_map[(Bear  , Player)]   = hitByBear
     # collide_map[(Bear  , Sticks)]   = noop
+
+    collide_map[(Bear, SlowTrap)]   = drop
+
     collide_map[(Bear  , Trap)]     = drop  # remove trap, when bear touch trap
     # collide_map[(Player, Bear)]   = noop
     # collide_map[(Player, Sticks)] = noop
-    collide_map[(Player, Trap)]   = drop  # player sets traps. No damage him
+    collide_map[(Player, Trap)]     = drop  # player sets traps. No damage him
 
     # collide_map[(Sticks, Bear)]   = noop
     # collide_map[(Sticks, Player)] = noop
-    collide_map[(Sticks, Sticks)] = drop
+    collide_map[(Sticks, Sticks)]   = drop
     # collide_map[(Sticks, Trap)]   = noop
     # how trap change object, that touch it
+    collide_map[(SlowTrap, Bear)]   = slowdownBeaer
+
     collide_map[(Trap  , Bear)]     = drop  #
     collide_map[(Trap  , Player)]   = damageUnitByTrap
     # collide_map[(Trap  , Sticks)]   = noop
     collide_map[(Trap  , Trap)]     = drop
 
     return collide_map
+
 
 __COLLIDE_MAP = create_collide_map()

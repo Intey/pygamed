@@ -35,10 +35,11 @@ class BearActor(Actor):
         # scaling changes self.get_rect()
         self.player = player
         self.schedule(self.update)
-        self.accel = Accelerator(80, 5, 5)
+        self.accel = Accelerator(self.domain.max_speed, 5, 5)
 
     def update(self, dt):
         target = self.player
+        self.accel.max_accel = self.domain.max_speed
         if self.cshape.distance(target.cshape) <= 5:
             self.accel.reset()
         else:
@@ -50,6 +51,7 @@ class BearActor(Actor):
         new_rect = last_rect.copy()
         dx *= dt
         dy *= dt
+
         new_rect.x += dx
         new_rect.y += dy
         _, _ = self.layer.collide_map(last_rect, new_rect, dx, dy)

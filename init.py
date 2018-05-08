@@ -67,6 +67,6 @@ def selectKey(count:int, keys:list):
     else:
         # get lowest
         key = keys[-1]
-    logger.debug(f"use sprite key {key} from mapped values {filtered}. Real sticks count - {count}")
+    # logger.debug(f"use sprite key {key} from mapped values {filtered}. Real sticks count - {count}")
     return key
 
