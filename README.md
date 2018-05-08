@@ -5,16 +5,18 @@ food
 
 # TODO
 
-- [x] animal spawner
+- [x] animal builder
 - [x] trap crafting
-- [ ] win condition
-- [x] trap slow down animals
 - [ ] rifle, shooting
+- [x] trap slow down animals
+- [ ] animal spawn area with timeout
 - [ ] campfile, food
-- [ ] true map level
-- [ ] scenario, campain
 - [ ] domain values should dictate which metricts use in framework
 - [ ] effects system
+- [ ] bear should fear fire
+- [ ] win condition
+- [ ] true map level
+- [ ] scenario, campain
 
 # BUGS
 
