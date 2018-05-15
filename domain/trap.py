@@ -7,10 +7,10 @@ class Trap:
     def __init__(self, power=0, range_=MIN_RANGE):
         print(power, range_)
         self.power = power
-        self.range_ = range_
+        self._range = range_
 
     def range(self):
-        return self.range_
+        return self._range
 
     def __eq__(self, o):
         return type(self) == type(o) and self.power == o.power \
