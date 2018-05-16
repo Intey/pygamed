@@ -6,6 +6,8 @@ from .resource import Resource
 from .builder import Builder
 from .recipe import Recipe
 from .slow_trap import SlowTrap
+from .exceptions import InitializationException
+
 
 class Player(Unit):
     """
@@ -27,6 +29,8 @@ class Player(Unit):
         self._inventory.add(Resource('sticks', 2))
         self._collector = Collector(speed=2)
         self._builder = Builder(self._inventory, Player.RECIPES)
+        self.damage = 20
+        self.shoot_distance = 100
 
     def collect(self, resource: Resource, dt):
         collected = self._collector.collect(resource, dt)
@@ -38,3 +42,5 @@ class Player(Unit):
     def create(self, recipe_name):
         return self._builder.create(recipe_name)
 
+    def shoot(self, target):
+        target.health -= self.damage

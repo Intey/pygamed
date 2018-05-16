@@ -15,6 +15,7 @@ from .bear import Bear
 from .sticks import Sticks
 from .unit import Unit
 from .noop import noop
+from .bullet import Bullet
 
 
 logger = getLogger(__name__)
@@ -36,7 +37,7 @@ def collide(left:Unit, right:Unit, distance:int):
     rightStay = lrf(left, right)
     leftStay = rlf(right, left)
 
-    logger.debug(f"collide({lrf}, {rlf}): lclass(stay),rclass(stay): {left.__class__.__name__}({leftStay}), {right.__class__.__name__}({rightStay}).")
+    logger.debug(f"collide: {left.__class__.__name__}({leftStay}), {right.__class__.__name__}({rightStay}).")
     return leftStay, rightStay
 
 
@@ -75,7 +76,7 @@ def create_collide_map():
     collide_map = dict()
     # dummy fill
 
-    class_list = [Bear, Player, Sticks, Trap, SlowTrap]
+    class_list = [Bear, Player, Sticks, Trap, SlowTrap, Bullet]
     variants = set(list(permutations(class_list, 2)) + \
                    list(combinations_with_replacement(class_list, 2)))
     for pair in variants:
@@ -84,10 +85,10 @@ def create_collide_map():
 
     collide_map[(Bear  , Player)]   = hitByBear
     # collide_map[(Bear  , Sticks)]   = noop
-
     collide_map[(Bear, SlowTrap)]   = drop
-
     collide_map[(Bear  , Trap)]     = drop  # remove trap, when bear touch trap
+    collide_map[(Bear, Bullet)]     = drop
+
     # collide_map[(Player, Bear)]   = noop
     # collide_map[(Player, Sticks)] = noop
     collide_map[(Player, Trap)]     = drop  # player sets traps. No damage him
