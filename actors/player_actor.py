@@ -32,7 +32,7 @@ class PlayerActor(Actor):
         self.last_create_delta = 0
         self.create_cooldown = 500
         self.last_shoot_dt = 0
-        self.shoot_rate = 500
+        self.shoot_rate = 2
 
     def update(self, dt):
         player_actor = self
@@ -57,6 +57,7 @@ class PlayerActor(Actor):
         keyboard = self.key_handler
         if keyboard[key.SPACE]:
             if self.last_shoot_dt == 0:
+                self.last_shoot_dt += dt
                 bear_actor = None
                 objs = self.cm.ranked_objs_near(self, self.domain.shoot_distance)
                 # reduce(lambda x, acc: [...acc, x] if isinstance(x[0], Bear) else acc, objs, [])
