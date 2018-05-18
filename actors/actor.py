@@ -15,7 +15,8 @@ class Actor(Sprite):
         self.setPos(self.position)
         self.domain = domain
         self.layer = None
-        self.schedule(self.update)
+        # use correct names for functions
+        self.schedule(self.__update)
 
     def setPos(self, position:tuple):
         """
@@ -29,5 +30,5 @@ class Actor(Sprite):
     def link_layer(self, layer):
         self.layer = layer
 
-    def update(self, dt):
+    def __update(self, dt):
         self.cshape.center = eu.Vector2(*self.position)

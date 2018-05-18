@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABCMeta
+from math import sqrt, fabs
 
 from cocos.collision_model import CollisionManagerGrid
 from cocos.actions import MoveTo
@@ -66,9 +67,15 @@ class PlayerActor(Actor):
                         bear_actor = obj
                         # create bullet
                         # set move action for it's. Sprite with cshape. When it's move check
+                        bullet_speed = 1000
                         bullet = Actor('assets/bullet.png', position=self.position, domain=Bullet())
                         self.layer.addCollidable(bullet)
-                        action = MoveTo(bear_actor.position, 0.08)
+                        x = fabs(fabs(self.position[0]) - fabs(bear_actor.position[0]))
+                        y = fabs(fabs(self.position[1]) - fabs(bear_actor.position[1]))
+
+                        distance = sqrt(x*x + y*y)
+                        bullet_fly_duration = distance/bullet_speed
+                        action = MoveTo(bear_actor.position, bullet_fly_duration)
                         bullet.do(action)
 
                         self.layer.collide_map
@@ -102,6 +109,7 @@ class PlayerActor(Actor):
 
         # change new_rect to not overlap collide-map
         # dx_f, dy_f - changes of velocity?
+        print("delta:", dx, dy)
         dx_f, dy_f = self.layer.collide_map(last_rect, new_rect, dx, dy)
 
         self.setPos(new_rect.center)

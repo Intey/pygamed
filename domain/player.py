@@ -30,7 +30,7 @@ class Player(Unit):
         self._collector = Collector(speed=2)
         self._builder = Builder(self._inventory, Player.RECIPES)
         self.damage = 20
-        self.shoot_distance = 100
+        self.shoot_distance = 300
 
     def collect(self, resource: Resource, dt):
         collected = self._collector.collect(resource, dt)
