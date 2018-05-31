@@ -70,6 +70,11 @@ def slowdownBeaer(trap: SlowTrap, bear: Bear):
     return True
 
 
+def damageBear(bullet: Bullet, bear: Bear):
+    bear.health -= 20
+    return bear.alive
+
+
 # function should return True, if second(right) argument shouldStay in game or
 # False if it should be removed
 def create_collide_map():
@@ -82,6 +87,7 @@ def create_collide_map():
     for pair in variants:
         logger.debug(f"fill cm with {pair}")
         collide_map[pair] = noop
+
 
     collide_map[(Bear  , Player)]   = hitByBear
     # collide_map[(Bear  , Sticks)]   = noop
@@ -104,6 +110,7 @@ def create_collide_map():
     collide_map[(Trap  , Player)]   = damageUnitByTrap
     # collide_map[(Trap  , Sticks)]   = noop
     collide_map[(Trap  , Trap)]     = drop
+    collide_map[(Bullet, Bear)]     = damageBear
 
     return collide_map
 

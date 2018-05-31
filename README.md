@@ -7,7 +7,7 @@ food
 
 - [x] animal builder
 - [x] trap crafting
-- [ ] rifle, shooting
+- [x] rifle, shooting
 - [x] trap slow down animals
 - [ ] animal spawn area with timeout
 - [ ] campfile, food

@@ -41,6 +41,3 @@ class Player(Unit):
 
     def create(self, recipe_name):
         return self._builder.create(recipe_name)
-
-    def shoot(self, target):
-        target.health -= self.damage

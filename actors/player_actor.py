@@ -68,21 +68,26 @@ class PlayerActor(Actor):
                         # create bullet
                         # set move action for it's. Sprite with cshape. When it's move check
                         bullet_speed = 1000
-                        bullet = Actor('assets/bullet.png', position=self.position, domain=Bullet())
-                        self.layer.addCollidable(bullet)
-                        x = fabs(fabs(self.position[0]) - fabs(bear_actor.position[0]))
-                        y = fabs(fabs(self.position[1]) - fabs(bear_actor.position[1]))
-
+                        x = bear_actor.position[0] - self.position[0]
+                        y = bear_actor.position[1] - self.position[1]
                         distance = sqrt(x*x + y*y)
+                        # calculate position
+                        direction = ((x/distance, y/distance))
+                        print(f"direction {direction}, xy: {x},{y}")
+                        offset = (TILE_WIDTH * direction[0],
+                                  TILE_WIDTH * direction[1])
+                        bullet_pos = (self.position[0] + offset[0], self.position[1] + offset[1])
+                        bullet = Actor('assets/bullet.png', position=bullet_pos, domain=Bullet())
+                        self.layer.addCollidable(bullet)
+
                         bullet_fly_duration = distance/bullet_speed
                         action = MoveTo(bear_actor.position, bullet_fly_duration)
                         bullet.do(action)
 
-                        self.layer.collide_map
-                        # collisions with map(trees)
-                        # on collide - drop bullet
-                        # on collide with bear call next
-                        self.domain.shoot(bear_actor.domain)
+                        # TODO: collisions with map(trees)
+
+                        break # shoot only one bear
+
         if self.last_shoot_dt >= self.shoot_rate:
             self.last_shoot_dt = 0
 
@@ -109,7 +114,6 @@ class PlayerActor(Actor):
 
         # change new_rect to not overlap collide-map
         # dx_f, dy_f - changes of velocity?
-        print("delta:", dx, dy)
         dx_f, dy_f = self.layer.collide_map(last_rect, new_rect, dx, dy)
 
         self.setPos(new_rect.center)
