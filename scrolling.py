@@ -140,8 +140,8 @@ if __name__ == "__main__":
             scrollLayer.addCollidable(event.payload)
 
 
-    bear_factory = BearFactory(player)
     map_positioner = MapPositioner(WIDTH, HEIGHT)
+    bear_factory = BearFactory(player, map_positioner)
     bear_factory.set_positioner(map_positioner)
     bear = BearActor(player, (200, 200))
     layer_subscriber(Event(Event.CREATE_TYPE, bear))

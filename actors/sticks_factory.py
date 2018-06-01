@@ -1,22 +1,22 @@
 from actors.sticks_actor import SticksActor
-from utils.random import randomPos
 
 from domain import Factory
+from .map_positioner import MapPositioner
 
 from logging import getLogger
 logger = getLogger(__name__)
 
+
 class SticksFactory(Factory):
     """Generate q`sticks"""
 
-    def __init__(self, WIDTH, HEIGHT):
+    def __init__(self, WIDTH, HEIGHT) -> None:
         """
         :WIDTH: width of map
         :HEIGHT: height of map
         """
-        Factory.__init__(self, logger)
-        self._WIDTH = WIDTH
-        self._HEIGHT = HEIGHT
+        positioner = MapPositioner(WIDTH, HEIGHT)
+        Factory.__init__(self, logger, positioner)
 
     def _create_impl(self):
-        return SticksActor(randomPos(self._WIDTH, self._HEIGHT))
+        return SticksActor(self.positioner.get_position())

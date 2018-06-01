@@ -1,5 +1,7 @@
 from abc import ABCMeta, abstractmethod
+from .positioner import Positioner
 
+import typing as t
 
 class Event:
     """
@@ -22,8 +24,8 @@ class Factory(metaclass=ABCMeta):
     """
     Docstring for Factory.
     """
-    def __init__(self, logger, positioner=None):
-        self.subscribers = []
+    def __init__(self, logger, positioner: Positioner) -> None:
+        self.subscribers:t.List[t.Callable] = []
         self.logger = logger
         self.positioner = positioner
 

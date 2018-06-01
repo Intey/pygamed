@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import typing as tp
 
-
 class Positioner(metaclass=ABCMeta):
     """
     Generate random position
