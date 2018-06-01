@@ -5,7 +5,7 @@ from .unit import Unit
 from .resource import Resource
 from .builder import Builder
 from .recipe import Recipe
-from .slow_trap import SlowTrap
+from .slow_trap import SlowTrap, Trap
 from .exceptions import InitializationException
 
 

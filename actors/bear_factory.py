@@ -1,20 +1,20 @@
 from .bear_actor import BearActor
-from .actor_factory import ActorFactory
 
-from utils.random import randomPos
+from domain import Factory
+
 from logging import getLogger
 
 logger = getLogger(__name__)
 
 
-class BearFactory(ActorFactory):
-    def __init__(self, WIDTH, HEIGHT, player):
-        ActorFactory.__init__(self)
-        self.width = WIDTH
-        self.height = HEIGHT
+class BearFactory(Factory):
+    """
+    Creates bear at random position in area from 0,0 to `WIDTH`,`HEIGHT`.
+    """
+    def __init__(self, player) -> None:
+        Factory.__init__(self, logger)
         self.player = player
 
     def _create_impl(self):
-        logger.debug("create bear")
-        pos = randomPos(self.width, self.height)
+        pos = self.positioner.get_position()
         return BearActor(self.player, pos)

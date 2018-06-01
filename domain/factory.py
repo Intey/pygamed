@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 
-from logging import getLogger
-
-logger = getLogger(__name__)
 
 class Event:
+    """
+    Factory event
+    """
     CREATE_TYPE = 'create'
 
     def __init__(self, type_, payload=None):
@@ -18,18 +18,26 @@ class Event:
         return str({"type": self.type, "payload": self.payload})
 
 
-class ActorFactory(metaclass=ABCMeta):
-    def __init__(self):
+class Factory(metaclass=ABCMeta):
+    """
+    Docstring for Factory.
+    """
+    def __init__(self, logger, positioner=None):
         self.subscribers = []
+        self.logger = logger
+        self.positioner = positioner
 
     def subscribe(self, subscriber):
+        """
+        Add subscriber on creation `Event`s
+        """
         self.subscribers.append(subscriber)
 
     def _notify(self, object_):
-        logger.debug("start notify")
+        self.logger.debug("start notify")
         for s in self.subscribers:
             event = Event(Event.CREATE_TYPE, object_)
-            logger.debug(f"notify {s} about {event}")
+            self.logger.debug(f"notify {s} about {event}")
             s(event)
 
     @abstractmethod
@@ -40,6 +48,13 @@ class ActorFactory(metaclass=ABCMeta):
         """
 
     def create(self):
+        """
+        Creates element with _create_impl realization
+        """
         o = self._create_impl()
-        logger.debug(f"created {o}")
+        self.logger.debug(f"created {o}")
         self._notify(o)
+
+    def set_positioner(self, positioner) -> None:
+        self.positioner = positioner
+

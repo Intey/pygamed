@@ -21,3 +21,12 @@ food
 # BUGS
 
 - [ ] multiple collide
+
+
+# IDEAS
+
+## Move actor to domain
+Factory can by domain create actors with given positioner, and factory. So,
+factory implementation - is configuration for creation actos, this just sets
+which concrete actor to generate without imlementing methods. Factory
+implementation become *declarative*.

@@ -1,19 +1,20 @@
 from .actor import Actor
-from domain import Trap
+from domain import Trap, Factory
 from random import randrange
 from utils.random import randomPos
 
-from .actor_factory import ActorFactory
+from logging import getLogger
 
+logger = getLogger(__name__)
 
-class TrapFactory(ActorFactory):
+class TrapFactory(Factory):
     """Generages traps"""
     def __init__(self, WIDTH, HEIGHT):
         """
         :WIDTH: width of map
         :HEIGTH: height of map
         """
-        ActorFactory.__init__(self)
+        Factory.__init__(self, logger)
         self._WIDTH = WIDTH
         self._HEIGHT = HEIGHT
 

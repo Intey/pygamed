@@ -1,10 +1,12 @@
 from actors.sticks_actor import SticksActor
 from utils.random import randomPos
 
-from .actor_factory import ActorFactory
+from domain import Factory
 
+from logging import getLogger
+logger = getLogger(__name__)
 
-class SticksFactory(ActorFactory):
+class SticksFactory(Factory):
     """Generate q`sticks"""
 
     def __init__(self, WIDTH, HEIGHT):
@@ -12,7 +14,7 @@ class SticksFactory(ActorFactory):
         :WIDTH: width of map
         :HEIGHT: height of map
         """
-        ActorFactory.__init__(self)
+        Factory.__init__(self, logger)
         self._WIDTH = WIDTH
         self._HEIGHT = HEIGHT
 

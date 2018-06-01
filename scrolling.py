@@ -17,8 +17,8 @@ from cocos.tiles import load
 from docopt import docopt
 from pyglet.window import key
 
-from actors import BearFactory, TrapFactory, BearActor
-from actors import Event
+from actors import BearFactory, TrapFactory, BearActor, MapPositioner
+from domain import Event
 from actors import PlayerActor
 from actors.sticks_factory import SticksFactory
 from gui.hud import HUD
@@ -99,7 +99,6 @@ class ActorsLayer(ScrollableLayer):
     def gameOver(self):
         logger.debug("DIED")
         self.unschedule(self.update)
-        pass
 
 
 if __name__ == "__main__":
@@ -141,7 +140,9 @@ if __name__ == "__main__":
             scrollLayer.addCollidable(event.payload)
 
 
-    bear_factory = BearFactory(mapLayer.px_width, mapLayer.px_height, player)
+    bear_factory = BearFactory(player)
+    map_positioner = MapPositioner(WIDTH, HEIGHT)
+    bear_factory.set_positioner(map_positioner)
     bear = BearActor(player, (200, 200))
     layer_subscriber(Event(Event.CREATE_TYPE, bear))
     # bear_factory.subscribe(layer_subscriber)

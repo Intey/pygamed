@@ -16,15 +16,18 @@ from .trap_actor import TrapActor
 TILE_WIDTH = 25  # FIXME: export to consts
 
 class PlayerActor(Actor):
+    """ Player actor. Root component, that control all player logic(and have some self)
+    Parameters
+    ----------
+    collide_manager: CollisionManagerGrid
+        Collide manager, that can answer is player collide some objects.  Used
+        for collecting  sticks
+    keyboard_handler: KeyStateHandler
+        Provide information about pressed keys. Used for collecting sticks
+    """
 
     def __init__(self, collide_manager: CollisionManagerGrid,
-                 keyboard_handler: KeyStateHandler):
-        """
-        Create player actor
-        :param collide_manager: collide manager, that can answer is player collide some objects.
-         Used for collecting  sticks
-        :param keyboard_handler: provide information about pressed keys. Used for collecting sticks
-        """
+                 keyboard_handler: KeyStateHandler) -> None:
         Actor.__init__(self, 'assets/user.png', position=(20, 20), domain=Player())
         self.cm = collide_manager
         self.key_handler = keyboard_handler
