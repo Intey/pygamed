@@ -9,7 +9,7 @@ food
 - [x] trap crafting
 - [x] rifle, shooting
 - [x] trap slow down animals
-- [ ] animal spawn area with timeout
+- [x] animal spawn area with timeout
 - [ ] campfile, food
 - [ ] domain values should dictate which metricts use in framework
 - [ ] effects system

@@ -17,7 +17,7 @@ from cocos.tiles import load
 from docopt import docopt
 from pyglet.window import key
 
-from actors import BearFactory, TrapFactory, BearActor, MapPositioner
+from actors import BearFactory, TrapFactory, BearActor, MapPositioner, BearSpawner
 from domain import Event
 from actors import PlayerActor
 from actors.sticks_factory import SticksFactory
@@ -141,13 +141,12 @@ if __name__ == "__main__":
 
 
     map_positioner = MapPositioner(WIDTH, HEIGHT)
-    bear_factory = BearFactory(player, map_positioner)
-    bear_factory.set_positioner(map_positioner)
-    bear = BearActor(player, (200, 200))
-    layer_subscriber(Event(Event.CREATE_TYPE, bear))
+    # bear_factory = BearFactory(player, map_positioner)
+    # bear_factory.set_positioner(map_positioner)
     # bear_factory.subscribe(layer_subscriber)
-    # for i in range(15):
-    #     bear_factory.create()
+    bear_spawner = BearSpawner(player, ((100, 100), (300, 300)), 3, layer_subscriber)
+    bear_spawner.start()
+
 
     trap_factory = TrapFactory(mapLayer.px_width, mapLayer.px_height)
     trap_factory.subscribe(layer_subscriber)

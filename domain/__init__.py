@@ -17,6 +17,6 @@ from .slow_trap import SlowTrap
 from .exceptions import InitializationException
 from .bullet import Bullet
 from .factory import Factory, Event
-from .timer import Timer
+from .notifier import Notifier
 from .spawner import Spawner
 from .positioner import Positioner
